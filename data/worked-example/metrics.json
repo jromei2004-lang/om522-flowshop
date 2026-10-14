@@ -1,0 +1,13 @@
+{
+  "makespan": 139,
+  "total_weighted_tardiness": 281,
+  "on_time_rate": 0.0,
+  "jobs_completed": 6,
+  "downstream_waiting_time": 13,
+  "idle_time_by_stage": {
+    "S1": 70,
+    "S2": 86,
+    "S3": 76,
+    "S4": 72
+  }
+}

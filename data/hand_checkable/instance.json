@@ -1,0 +1,13 @@
+{
+  "option_number": 6,
+  "option_name": "permutation_flow_shop",
+  "profile": "hand_checkable",
+  "base_seed": 522524,
+  "instance_seed": 592535,
+  "size_parameter": 6,
+  "expected_condition": "feasible",
+  "schema_version": 4,
+  "time_unit": "minutes",
+  "condition_detail": "4 ordered stages, staggered releases, and one common job sequence",
+  "source": "synthetic instructor-generated data"
+}

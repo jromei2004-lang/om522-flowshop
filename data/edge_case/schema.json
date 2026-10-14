@@ -1,0 +1,65 @@
+{
+  "format": "CSV with a header row",
+  "files": {
+    "jobs.csv": {
+      "row_count": 10,
+      "columns": [
+        {
+          "name": "job_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "release_time",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "due_date",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "weight",
+          "type": "integer",
+          "nullable": false
+        }
+      ]
+    },
+    "processing_times.csv": {
+      "row_count": 40,
+      "columns": [
+        {
+          "name": "job_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "stage_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "processing_time",
+          "type": "integer",
+          "nullable": false
+        }
+      ]
+    },
+    "stages.csv": {
+      "row_count": 4,
+      "columns": [
+        {
+          "name": "stage_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "sequence",
+          "type": "integer",
+          "nullable": false
+        }
+      ]
+    }
+  }
+}

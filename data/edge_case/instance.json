@@ -1,0 +1,13 @@
+{
+  "option_number": 6,
+  "option_name": "permutation_flow_shop",
+  "profile": "edge_case",
+  "base_seed": 522524,
+  "instance_seed": 592595,
+  "size_parameter": 10,
+  "expected_condition": "invalid",
+  "schema_version": 4,
+  "time_unit": "minutes",
+  "condition_detail": "invalid nonpositive processing time",
+  "source": "synthetic instructor-generated data"
+}

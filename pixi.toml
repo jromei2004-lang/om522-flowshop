@@ -1,0 +1,22 @@
+[workspace]
+name = "om522-flowshop"
+version = "0.1.0"
+description = "OM 522 Option 6: permutation flow shop decision tool (total weighted tardiness)"
+channels = ["conda-forge"]
+platforms = ["win-64", "osx-arm64", "osx-64"]
+
+[dependencies]
+python = "3.12.*"
+pandas = "*"
+numpy = "*"
+matplotlib = "*"
+pytest = "*"
+
+[tasks]
+# Placeholders until the methods, checker, and visuals exist.
+# Pixi runs tasks in its own cross-platform shell, so these behave the same in
+# PowerShell and the Mac terminal.
+test = "pytest"
+solve = "echo 'solve is not implemented yet (usage: pixi run solve <input_dir> <output_dir>)'"
+compare = "echo 'compare is not implemented yet'"
+plot = "echo 'plot is not implemented yet'"
