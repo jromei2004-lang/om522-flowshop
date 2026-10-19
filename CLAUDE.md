@@ -70,6 +70,16 @@ checker. A better measure never makes up for an infeasible decision.
 - Researched method: Iterated Greedy (Ruiz and Stützle 2007, EJOR) with NEH-style
   insertion (Nawaz, Enscore, and Ham 1983, Omega) adapted to weighted tardiness.
 
+## Agents
+Project subagents live in `.claude/agents/`.
+- `reviewer`: read-only. Checks code against the brief, the guide, and this file after
+  any method, checker, or test change, and lists findings with file and line.
+- `tuner`: runs `pixi run tune`, analyzes `results/tuning.csv` against the rule to beat,
+  appends a summary line to findings.md, and suggests the next grid. Development
+  instances only, never the held-out case.
+
+Only the main session edits method code. Subagents report; they do not change `src/`.
+
 ## Cross-platform (one teammate on Windows, one on Mac)
 - pixi.toml must list platforms = ["win-64", "osx-arm64", "osx-64"] so the lock
   file works on both machines.
