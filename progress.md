@@ -2,6 +2,42 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-19 (rule to beat)
+
+### What changed
+- Branch `john/rule-to-beat` (from `loader`). James is building the checker on his own
+  branch with his own Claude Code; this branch does not touch the checker.
+- `src/flowshop/schedule.py`: method-side timing (start = later of job ready and
+  machine free; completion = start + processing time; no rounding) plus total weighted
+  tardiness and total waiting. Iterated Greedy will reuse it. The checker must not
+  import it.
+- `src/flowshop/rule_to_beat.py`: earliest due date order, ties by job id (string order).
+- `src/flowshop/decision.py`: writes decision.json in the solution.json structure.
+- `src/flowshop/cli.py`: solve now writes decision.json and summary.txt. `--method`
+  option with `rule` as the only choice and current default. When Iterated Greedy is
+  added, it must become the default.
+- Loader test for valid input now confirms decision.json is written (closes reviewer
+  finding 2).
+- findings.md: rule-to-beat baseline table.
+
+### Test results
+`pixi run test`: 33 passed. Required test 1 (`test_rule_reproduces_worked_example`)
+matches the sequence and all 24 starts and completions in worked-example/solution.json,
+with total weighted tardiness 281 and waiting 13. Tests 2 and 3 pass.
+
+### Current best scores (rule to beat; not yet checker-verified for dev instances)
+hand_checkable 281, development_small 1417, development_medium 2371,
+development_large 23015 (total weighted tardiness).
+
+### Next steps
+1. When James's checker is merged, run it on the rule's decisions for all four instances.
+2. Loader fixes from the review on a small branch: name columns for rows with the wrong
+   number of values (finding 1), reject zero stages or zero jobs (3), `[0-9]` in the
+   integer pattern (4), unknown extra column types (5), block an output folder inside
+   the input folder (6).
+3. Iterated Greedy with NEH-style insertion, fixed seed, iteration-count stopping;
+   make it the solve default. Then `pixi run tune` and the tuner subagent.
+
 ## 2026-10-19
 
 ### What changed
