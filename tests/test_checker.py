@@ -344,3 +344,44 @@ def test_blank_identifier_in_input_exits_2(tmp_path):
     proc = run_check(inst, SOLUTION)
     assert proc.returncode == 2
     assert "jobs.csv, column job_id" in proc.stderr
+
+
+# ---------- --report output (used by pixi run compare and the charts) ----------
+
+def test_report_matches_worked_example(tmp_path):
+    report_path = tmp_path / "report.json"
+    proc = subprocess.run(
+        [sys.executable, "-m", "flowshop.checker", str(HAND), str(SOLUTION), "--report", str(report_path)],
+        capture_output=True, text=True, encoding="utf-8",
+    )
+    assert proc.returncode == 0
+    report = read_json(report_path)
+    solution = read_json(SOLUTION)
+    assert report["feasible"] is True and report["violations"] == []
+    assert report["measures"] == {"total_weighted_tardiness": 281, "total_waiting": 13, "makespan": 139}
+    assert report["stages"] == ["S1", "S2", "S3", "S4"]
+    assert report["sequence"] == solution["sequence"]
+    ops = {(o["job_id"], o["stage_id"]): (o["start"], o["completion"]) for o in report["operations"]}
+    assert ops == {(e["job_id"], e["stage_id"]): (e["start"], e["completion"]) for e in solution["schedule"]}
+
+
+def test_report_completion_is_recomputed_from_input(tmp_path):
+    d = read_json(SOLUTION)
+    entry(d, "J004", "S4")["completion"] = 139 + 5e-9  # within tolerance; report uses start + p
+    path = write_json(tmp_path / "d.json", d)
+    report_path = tmp_path / "report.json"
+    assert checker.main([str(HAND), str(path), "--report", str(report_path)]) == 0
+    op = next(o for o in read_json(report_path)["operations"] if (o["job_id"], o["stage_id"]) == ("J004", "S4"))
+    assert op["completion"] == 139
+
+
+def test_report_written_for_infeasible_decision(tmp_path):
+    d = read_json(SOLUTION)
+    entry(d, "J003", "S2")["start"] = 73
+    path = write_json(tmp_path / "d.json", d)
+    report_path = tmp_path / "report.json"
+    assert checker.main([str(HAND), str(path), "--report", str(report_path)]) == 1
+    report = read_json(report_path)
+    assert report["feasible"] is False
+    assert report["violations"][0] == {"rule": "duration", "job_id": "J003", "other_job_id": None,
+                                       "stage_id": "S2", "message": report["violations"][0]["message"]}

@@ -12,6 +12,12 @@ OM 522 Option 6 flow shop decision tool
   the input CSV files and the decision file, reports each violated constraint with its job
   and stage, and recomputes total weighted tardiness, total waiting between stages, and
   makespan. Exit status: 0 feasible, 1 infeasible, 2 the input or decision file cannot be read.
+- `pixi run compare` runs every method through `pixi run solve --method <m>` on
+  hand_checkable and the three development instances, checks each decision with
+  `pixi run check --report`, and writes `results/comparison.csv` (feasibility, total weighted
+  tardiness, total waiting, makespan, runtime, CPU) plus Gantt charts and a comparison bar chart
+  in `results/figures/`. All measures and chart times come from the checker's report, not from
+  a method's own output. A method that `solve` does not offer yet is skipped with a message.
 - `pixi run test` runs all tests.
 - `pixi run tune` runs the Iterated Greedy tuning grid on the development instances and
   writes `results/tuning.csv`. It is resumable: finished runs are skipped.

@@ -2,6 +2,46 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-19 (compare)
+
+### What changed
+- Branch `james/compare` (from `main` after PRs #2 and #3). Do not merge until John's
+  Iterated Greedy (`john/iterated-greedy`, `--method ig`) is on main.
+- `pixi run compare` (`src/flowshop/compare.py`): for methods rule and ig, on hand_checkable
+  and the three development instances, runs `pixi run solve <inst> results/runs/<m>/<inst>
+  --method <m>`, then `pixi run check ... --report check_report.json`. Writes
+  `results/comparison.csv`: method, instance, jobs, stages, feasible, total weighted tardiness,
+  total waiting, makespan, runtime_s, cpu, note. Measures come only from the checker report;
+  runtime_s is the method's computation time from summary.txt (the checker cannot recompute
+  it). A method missing from `solve --help` is skipped with a message (ig today).
+- Checker: new `--report <file.json>` option (status, violations, measures, stage order,
+  sequence, and every operation with completion recomputed as start + processing time).
+  Checks and console output are unchanged; it still imports nothing from flowshop.
+- `src/flowshop/plots.py`: Gantt per method for hand_checkable and development_small (one row
+  per stage, one color per job, the same at every stage; job ids on bars) and
+  `comparison_bars.png` (one panel per instance and measure, each with its own scale). Charts
+  read only checker reports. Colors: validated categorical palette for up to 8 jobs, an ordinal
+  blue ramp by sequence position past 8 (development_small has 15 jobs).
+- `results/runs/` is git-ignored. comparison.csv and figures are not committed yet: regenerate
+  and commit them after ig is merged so they show both methods.
+
+### Test results
+`pixi run test`: 96 passed (87 + 6 compare/chart tests + 3 checker report tests).
+`pixi run compare` (rule only, ig skipped) on an Apple M2 in about 2.5 s:
+hand_checkable 281 / waiting 13, development_small 1417 / 732, development_medium 2371 / 2040,
+development_large 23015 / 7863, all feasible per the checker. Rule runtimes round to 0.0000 to
+0.0002 s because summary.txt prints 4 decimals.
+
+### Current best scores
+Unchanged (rule to beat, checker-verified): 281, 1417, 2371, 23015.
+
+### Next steps
+1. When John merges Iterated Greedy: rebase james/compare onto main (expect a one-line
+   conflict on the `compare =` line in pixi.toml; keep `python -m flowshop.compare`), run
+   `pixi run compare`, check that ig rows are feasible, commit results/comparison.csv and
+   results/figures, then merge.
+2. Stress test (30 scenarios on development_medium, saved to files first).
+
 ## 2026-10-19 (main merged into john/iterated-greedy; IG checker-verified)
 
 ### What changed
@@ -101,6 +141,7 @@ hand_checkable 233 (rule 281), development_small 21 (1417), development_medium 5
 3. Ask the Mac teammate to run `pixi run solve` on development_small and compare
    decision.json with ours (cross-platform reproducibility).
 4. Loader fixes from the first review; README method write-up (guide 2.3).
+
 ## 2026-10-19 (loader fixes)
 
 ### What changed

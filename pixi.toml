@@ -19,10 +19,10 @@ flowshop = { path = ".", editable = true }
 
 [tasks]
 # Pixi runs tasks in its own cross-platform shell, so these behave the same in
-# PowerShell and the Mac terminal. compare and plot are placeholders for now.
+# PowerShell and the Mac terminal. compare also draws the charts; plot is a placeholder.
 test = "pytest"
 solve = "python -m flowshop.cli"
 check = "python -m flowshop.checker"
 tune = "python -m flowshop.tune"
-compare = "echo 'compare is not implemented yet'"
+compare = "python -m flowshop.compare"
 plot = "echo 'plot is not implemented yet'"

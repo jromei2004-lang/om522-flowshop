@@ -19,6 +19,11 @@ Constraints checked, each with tolerance 1e-8 as in the guide, Section 4.3:
   - the order of jobs on every stage is the sequence.
 
 Exit status: 0 feasible, 1 infeasible, 2 the input files or decision file cannot be read.
+
+With --report <file.json> the checker also writes its result as JSON: status,
+violations, recomputed measures, the stage order from stages.csv, and every operation
+with its start and a completion recomputed as start + processing time from the input.
+The comparison and the charts read only these reports.
 """
 
 from __future__ import annotations
@@ -64,6 +69,10 @@ class CheckResult:
     violations: list[Violation] = field(default_factory=list)
     measures: dict[str, float] | None = None   # None when the schedule is incomplete
     ignored_keys: list[str] = field(default_factory=list)
+    stages: list[str] = field(default_factory=list)
+    sequence: list[str] | None = None          # None unless every input job appears once
+    # (job_id, stage_id, start, start + processing time); empty when the schedule is incomplete
+    operations: list[tuple[str, str, float, float]] = field(default_factory=list)
 
     @property
     def feasible(self) -> bool:
@@ -284,7 +293,13 @@ def check_decision(jobs, stages, p, decision: object) -> CheckResult:
                 result.add("same sequence", f"position {pos + 1} on this stage is job {order[pos]}, "
                            f"but the sequence has job {sequence[pos]} there", order[pos], sid, sequence[pos])
 
+    result.stages = list(stages)
+    if seq_ok:
+        result.sequence = list(sequence)
     if complete:
+        order = result.sequence or list(jobs)
+        result.operations = [(j, s, times[(j, s)][0], times[(j, s)][0] + p[(j, s)])
+                             for j in order for s in stages]
         last = stages[-1]
         result.measures = {
             "total_weighted_tardiness": sum(
@@ -306,6 +321,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="check", description="Independent checker for an option 6 decision.json")
     parser.add_argument("input_dir", type=Path, help="instance directory")
     parser.add_argument("decision", type=Path, help="decision.json to check")
+    parser.add_argument("--report", type=Path, help="also write the result as JSON to this file")
     args = parser.parse_args(argv)
 
     try:
@@ -332,7 +348,32 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  Total weighted tardiness: {result.measures['total_weighted_tardiness']}")
         print(f"  Total waiting between stages: {result.measures['total_waiting']}")
         print(f"  Makespan: {result.measures['makespan']}")
+    if args.report is not None:
+        write_report(result, args.report)
+        print(f"Report written to {args.report}")
     return 0 if result.feasible else 1
+
+
+def write_report(result: CheckResult, path: Path) -> None:
+    report = {
+        "feasible": result.feasible,
+        "violations": [
+            {"rule": v.rule, "job_id": v.job_id, "other_job_id": v.other_job_id,
+             "stage_id": v.stage_id, "message": v.message}
+            for v in result.violations
+        ],
+        "measures": result.measures,
+        "stages": result.stages,
+        "sequence": result.sequence,
+        "operations": [
+            {"job_id": j, "stage_id": s, "start": start, "completion": completion}
+            for j, s, start, completion in result.operations
+        ],
+    }
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2)
 
 
 if __name__ == "__main__":
