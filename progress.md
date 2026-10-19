@@ -2,6 +2,36 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-19 (main merged into john/iterated-greedy; IG checker-verified)
+
+### What changed
+- Merged main (James's checker, PR #2, and loader fixes, PR #3) into
+  john/iterated-greedy. Conflicts in README, agent_log.md, pixi.toml, and progress.md
+  were resolved by keeping both sides. cli.py merged cleanly and keeps both James's
+  "output not inside input" check and the IG default.
+- tests/test_iterated_greedy.py: test_zero_jobs now builds an empty instance directly,
+  because the loader now rejects a jobs.csv with no rows (James's fix for finding 3).
+- README Commands section now lists solve (with --method), check, test, and tune.
+- findings.md: checker-verified comparison of IG and the rule on all four instances.
+
+### Test results
+`pixi run test`: 115 passed (61 from this branch plus James's checker and loader-fix
+tests). `pixi run check` on all 8 decisions (IG and rule, four instances): all feasible,
+and the checker's TWT equals each method's own TWT.
+
+### Current best scores (checker-verified; IG provisional defaults)
+hand_checkable 233 (rule 281), development_small 21 (1417), development_medium 58
+(2371), development_large 4276 (23015). IG on large took 10.8 s this session.
+
+### Next steps
+1. James reviews the john/iterated-greedy pull request; merge to main.
+2. Finish tuning: `pixi run tune` resumes at run 86 of 180 (about 1.5 hours, laptop idle),
+   then the tuner subagent, pick defaults, and commit the complete results/tuning.csv.
+   Add a step that runs the checker on every tuning decision and fills the `checker`
+   column.
+3. Prototype plan (video of at most 10 minutes), `pixi run compare`, and the README
+   method write-up (guide 2.1 and 2.3).
+
 ## 2026-10-19 (tuning started, not finished)
 
 ### What changed
