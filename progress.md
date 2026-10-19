@@ -2,6 +2,105 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-19 (main merged into john/iterated-greedy; IG checker-verified)
+
+### What changed
+- Merged main (James's checker, PR #2, and loader fixes, PR #3) into
+  john/iterated-greedy. Conflicts in README, agent_log.md, pixi.toml, and progress.md
+  were resolved by keeping both sides. cli.py merged cleanly and keeps both James's
+  "output not inside input" check and the IG default.
+- tests/test_iterated_greedy.py: test_zero_jobs now builds an empty instance directly,
+  because the loader now rejects a jobs.csv with no rows (James's fix for finding 3).
+- README Commands section now lists solve (with --method), check, test, and tune.
+- findings.md: checker-verified comparison of IG and the rule on all four instances.
+
+### Test results
+`pixi run test`: 115 passed (61 from this branch plus James's checker and loader-fix
+tests). `pixi run check` on all 8 decisions (IG and rule, four instances): all feasible,
+and the checker's TWT equals each method's own TWT.
+
+### Current best scores (checker-verified; IG provisional defaults)
+hand_checkable 233 (rule 281), development_small 21 (1417), development_medium 58
+(2371), development_large 4276 (23015). IG on large took 10.8 s this session.
+
+### Next steps
+1. James reviews the john/iterated-greedy pull request; merge to main.
+2. Finish tuning: `pixi run tune` resumes at run 86 of 180 (about 1.5 hours, laptop idle),
+   then the tuner subagent, pick defaults, and commit the complete results/tuning.csv.
+   Add a step that runs the checker on every tuning decision and fills the `checker`
+   column.
+3. Prototype plan (video of at most 10 minutes), `pixi run compare`, and the README
+   method write-up (guide 2.1 and 2.3).
+
+## 2026-10-19 (tuning started, not finished)
+
+### What changed
+- The full tuning grid (`pixi run tune`) was started on John's laptop and stopped on
+  purpose after 85 of 180 runs (255 of 540 rows): all of development_small and 25 of 60
+  development_medium runs. None of development_large has run.
+- `pixi run tune` is now resumable: runs that already have every iteration row in
+  results/tuning.csv are skipped. Rows of a run that stopped partway, and a cut-off last
+  line, are dropped and that run is redone. Results are deterministic, so a resumed grid
+  gives the same rows as an uninterrupted one (except runtimes). `--fresh` starts over.
+- The partial results/tuning.csv stays on John's laptop only. It is not committed.
+
+### Test results
+`pixi run test`: 61 passed (adds resume tests: skips finished runs, same rows as an
+uninterrupted run, cleans a partial run and a cut-off line, refuses a file with other
+columns).
+
+### Current best scores
+Unchanged from the previous entry (IG provisional defaults: hand_checkable 233,
+small 21, medium 58, large 4276; not yet checker-verified).
+
+### Next steps
+1. Tuning: run `pixi run tune` again on John's laptop to finish the remaining 95 runs
+   (35 medium, 60 large; about 1.5 hours). Keep the laptop otherwise idle, since
+   runtime is recorded. Then analyze with the tuner subagent, pick defaults, and commit
+   the complete results/tuning.csv.
+2. James's checker: merge it, run it on the rule's and IG's decisions for all four
+   instances, and fill in the `checker` column of the tuning rows.
+3. Prototype plan: video of at most 10 minutes (fresh instance copied to a new path,
+   both methods, checker confirming both, initial comparison on at least three
+   instances, the uncertain input we will vary, and each member's walk-through of one
+   agent-drafted component). Also: `pixi run compare`, the README method write-up
+   (guide 2.1 and 2.3), and the open loader fixes.
+
+## 2026-10-19 (Iterated Greedy)
+
+### What changed
+- Branch `john/iterated-greedy` (from `john/rule-to-beat`).
+- numba added through pixi (locked for win-64, osx-arm64, osx-64).
+- `src/flowshop/fast_eval.py`: numba versions of the schedule.py timing with
+  cache=True and the prefix shortcut (insert at k: only recompute from k onward).
+  schedule.py stays the plain-Python reference.
+- `src/flowshop/iterated_greedy.py`: EDD start, NEH-style insertion in EDD order, then
+  destruction, construction, local search, and constant-temperature acceptance; stops
+  on iteration count with a safety time cap. Never worse than EDD. Supports iteration
+  checkpoints for tuning.
+- `solve` now defaults to Iterated Greedy (`--method rule` still available), with
+  `--iterations --d --seed --tp --time-limit`. Reported time includes numba compile.
+- `src/flowshop/tune.py` and `pixi run tune`: grid d 2/4/6/8, iterations
+  500/1000/2000, Tp 0.2/0.4/0.8, seeds 1 to 5, dev instances only. Writes
+  results/tuning.csv.
+- Reviewer findings fixed or documented (see agent_log.md). README documents the
+  temperature scaling as our assumption and the other adaptations.
+
+### Test results
+`pixi run test`: 58 passed (numba matches schedule.py exactly on all four instances,
+prefix shortcut matches full recompute, IG never worse than EDD, same seed same
+decision across processes, edge cases, tune checkpoints equal shorter runs).
+
+### Current best scores (IG provisional defaults; not yet checker-verified)
+hand_checkable 233 (rule 281), development_small 21 (1417), development_medium 58
+(2371), development_large 4276 (23015). Large takes about 25 s.
+
+### Next steps
+1. Analyze results/tuning.csv with the tuner subagent; pick defaults.
+2. Run James's checker on every decision (tuning rows have checker = pending).
+3. Ask the Mac teammate to run `pixi run solve` on development_small and compare
+   decision.json with ours (cross-platform reproducibility).
+4. Loader fixes from the first review; README method write-up (guide 2.3).
 ## 2026-10-19 (loader fixes)
 
 ### What changed

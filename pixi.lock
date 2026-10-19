@@ -91,9 +91,11 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libxcb-1.17.0-h2478c6c_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libzlib-1.3.2-hbb4bfdb_3.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/llvm-openmp-23.1.3-h8c1e6b9_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/llvmlite-0.50.0-py312hfe0b5f7_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.11.2-py312had31f23_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.11.2-py312had7407c_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/ncurses-6.6-hcc0dc9a_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/numba-0.68.0-py312h3369ccd_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/numpy-2.5.4-py312h66ee8b4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/openjpeg-2.5.4-he4eae51_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/openssl-3.6.5-h332eb6d_0.conda
@@ -183,9 +185,11 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libxcb-1.17.0-hbffa61f_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libzlib-1.3.2-h8088a28_3.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/llvm-openmp-23.1.3-hdb3d66b_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/llvmlite-0.50.0-py312ha6a25cf_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-3.11.2-py312hf2eba6f_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.11.2-py312h11997a8_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ncurses-6.6-he64c551_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/numba-0.68.0-py312h9052ff5_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/numpy-2.5.4-py312hff34920_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/openjpeg-2.5.4-h4d1e80c_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/openssl-3.6.5-h55eecbc_0.conda
@@ -278,9 +282,11 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/libxslt-1.1.45-ha5384fd_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libzlib-1.3.2-hfd05255_3.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/llvm-openmp-23.1.3-h49e36cd_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/llvmlite-0.50.0-py312h1534abe_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-3.11.2-py312h8e0e4fc_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-base-3.11.2-py312hf9659c1_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/mkl-2026.1.0-hac47afa_235.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/numba-0.68.0-py312ha1a9051_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/numpy-2.5.4-py312ha3f287d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/openjpeg-2.5.4-h90fa87c_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/openssl-3.6.5-hf411b9b_0.conda
@@ -1299,6 +1305,24 @@ packages:
     - llvm-openmp >=23.1.3
   size: 311780
   timestamp: 1791368961053
+- conda: https://conda.anaconda.org/conda-forge/osx-64/llvmlite-0.50.0-py312hfe0b5f7_0.conda
+  sha256: 85488973e5eb13dfd11c7e82cd5cd4b97c67b6a9f4a02a75413fcc77775d0b51
+  md5: 742e944d8ce0576c182cb024a1b74d4a
+  depends:
+  - python
+  - libcxx >=21
+  - __osx >=11.0
+  - python 3.12.* *_cpython
+  - python_abi 3.12.* *_cp312
+  - libzlib >=1.3.2,<2.0a0
+  - zstd >=1.5.7,<1.6.0a0
+  license: BSD-2-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/llvmlite?source=compressed-mapping
+  run_exports: {}
+  size: 33082156
+  timestamp: 1790753622923
 - conda: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-3.11.2-py312had31f23_1.conda
   sha256: 09b331eef8ea38a2126128519275d5ff6ac4a2b8d25c8ba1c403868b59726c67
   md5: 5dcc505f205c1525ff04b9874e4e53e6
@@ -1356,6 +1380,32 @@ packages:
     - ncurses >=6.6,<7.0a0
   size: 834865
   timestamp: 1786356957789
+- conda: https://conda.anaconda.org/conda-forge/osx-64/numba-0.68.0-py312h3369ccd_1.conda
+  sha256: 535a02d68b23dcb103c1ad9beae16d5c2dfabe532bbfd4bfe84fc1a94f5e9c78
+  md5: 3ad048240033bc027e29c93be06925cf
+  depends:
+  - python
+  - llvmlite >=0.50.0,<0.51.0a0
+  - numpy >=1.22.3,<2.6
+  - llvm-openmp >=21.1.8
+  - libcxx >=21
+  - __osx >=11.0
+  - numpy >=1.25,<3
+  - python_abi 3.12.* *_cp312
+  constrains:
+  - tbb >=2021.6.0
+  - libopenblas !=0.3.6
+  - cuda-version >=11.2
+  - cudatoolkit >=11.2
+  - scipy >=1.0
+  - cuda-python >=11.6
+  license: BSD-2-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/numba?source=compressed-mapping
+  run_exports: {}
+  size: 6118587
+  timestamp: 1790835989196
 - conda: https://conda.anaconda.org/conda-forge/osx-64/numpy-2.5.4-py312h66ee8b4_0.conda
   sha256: 310024e64fc91bcb7e319d0408e34d5232660f53e468e15a52312aeec5adc791
   md5: 0c970e7ea98a6236a2aa429fee49c2cc
@@ -2371,6 +2421,23 @@ packages:
     - llvm-openmp >=23.1.3
   size: 287944
   timestamp: 1791950643503
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/llvmlite-0.50.0-py312ha6a25cf_0.conda
+  sha256: 545586bcfc6bd866b7384604f669e24959328b73a26475631f9a8ab04b0abb19
+  md5: c3c2abd754dd0a98a30e59bf133c59a4
+  depends:
+  - python
+  - __osx >=11.0
+  - libcxx >=21
+  - zstd >=1.5.7,<1.6.0a0
+  - libzlib >=1.3.2,<2.0a0
+  - python_abi 3.12.* *_cp312
+  license: BSD-2-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/llvmlite?source=compressed-mapping
+  run_exports: {}
+  size: 30497478
+  timestamp: 1790753620077
 - conda: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-3.11.2-py312hf2eba6f_1.conda
   sha256: 8e919d3e0a1a688048f5c4c01a2c67ba159eaf5a2df2bf8e9098f27fe9eb6f59
   md5: 82435055ff7171a99fbd5e83f940b0be
@@ -2428,6 +2495,32 @@ packages:
     - ncurses >=6.6,<7.0a0
   size: 804298
   timestamp: 1786355189145
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/numba-0.68.0-py312h9052ff5_1.conda
+  sha256: bedcaa7f608e7f04fcb25fba3fc9c505c665908d29aa9554e254096618046481
+  md5: 1ee7d8789312b098f86060167ec9c06c
+  depends:
+  - python
+  - llvmlite >=0.50.0,<0.51.0a0
+  - numpy >=1.22.3,<2.6
+  - libcxx >=21
+  - __osx >=11.0
+  - llvm-openmp >=21.1.8
+  - python_abi 3.12.* *_cp312
+  - numpy >=1.25,<3
+  constrains:
+  - tbb >=2021.6.0
+  - libopenblas >=0.3.18,!=0.3.20
+  - cuda-version >=11.2
+  - cudatoolkit >=11.2
+  - scipy >=1.0
+  - cuda-python >=11.6
+  license: BSD-2-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/numba?source=compressed-mapping
+  run_exports: {}
+  size: 6112507
+  timestamp: 1790835922925
 - conda: https://conda.anaconda.org/conda-forge/osx-arm64/numpy-2.5.4-py312hff34920_0.conda
   sha256: 7a72f5345e7e9f2ed8385986de8d96e321301726dfd6c1a7d0a0d2106ccf204b
   md5: f1c8bb69dfcbbdd01e7ea79c8ae31934
@@ -3552,6 +3645,24 @@ packages:
     - llvm-openmp >=23.1.3
   size: 343582
   timestamp: 1791951366925
+- conda: https://conda.anaconda.org/conda-forge/win-64/llvmlite-0.50.0-py312h1534abe_0.conda
+  sha256: c23e3ecd9f4a91349c408584ec57447afe5d85a8305f7fa3f4629dfdc6883171
+  md5: a6f0a7c583b0ba99d9a0b8c3f2e01a0a
+  depends:
+  - python
+  - vc >=14.3,<15
+  - vc14_runtime >=14.44.35208
+  - ucrt >=10.0.20348.0
+  - libzlib >=1.3.2,<2.0a0
+  - zstd >=1.5.7,<1.6.0a0
+  - python_abi 3.12.* *_cp312
+  license: BSD-2-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/llvmlite?source=compressed-mapping
+  run_exports: {}
+  size: 28572436
+  timestamp: 1790753653114
 - conda: https://conda.anaconda.org/conda-forge/win-64/matplotlib-3.11.2-py312h8e0e4fc_1.conda
   sha256: 3228576af2e129b4372982c8ef7be12b1744a800bbc53a20d593604035e145d8
   md5: a72528b4751b50a10ff4511ca5993cac
@@ -3614,6 +3725,32 @@ packages:
   run_exports: {}
   size: 114686732
   timestamp: 1787725739779
+- conda: https://conda.anaconda.org/conda-forge/win-64/numba-0.68.0-py312ha1a9051_1.conda
+  sha256: fbad7ed7b745de3519f7686e5cfc85a38ffac8a759af21072e576193f562ad02
+  md5: 7a72e8ced3b2b8c31650d672d5fdfdf5
+  depends:
+  - python
+  - llvmlite >=0.50.0,<0.51.0a0
+  - numpy >=1.22.3,<2.6
+  - vc >=14.3,<15
+  - vc14_runtime >=14.44.35208
+  - ucrt >=10.0.20348.0
+  - numpy >=1.25,<3
+  - python_abi 3.12.* *_cp312
+  constrains:
+  - tbb >=2021.6.0
+  - libopenblas !=0.3.6
+  - cuda-version >=11.2
+  - cudatoolkit >=11.2
+  - scipy >=1.0
+  - cuda-python >=11.6
+  license: BSD-2-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/numba?source=compressed-mapping
+  run_exports: {}
+  size: 6122250
+  timestamp: 1790835904969
 - conda: https://conda.anaconda.org/conda-forge/win-64/numpy-2.5.4-py312ha3f287d_0.conda
   sha256: 38aa0c5e5c4a7b263ea03b39f5f26fd038517571a13bcd4b9cbdef3051db5ed2
   md5: 035814b95806c49d7649b166542678a0
