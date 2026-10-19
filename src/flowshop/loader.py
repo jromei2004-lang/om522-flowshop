@@ -36,8 +36,10 @@ REQUIRED_COLUMNS = {
 }
 
 KNOWN_TYPES = {"string", "integer", "number"}
-INTEGER_PATTERN = re.compile(r"[+-]?\d+")
-NUMBER_PATTERN = re.compile(r"[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?")
+# [0-9], not \d: \d also matches digits from other scripts (e.g. Arabic-Indic), which
+# int() and float() would quietly accept.
+INTEGER_PATTERN = re.compile(r"[+-]?[0-9]+")
+NUMBER_PATTERN = re.compile(r"[+-]?([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][+-]?[0-9]+)?")
 
 
 class InputError(Exception):
@@ -125,6 +127,11 @@ def _read_schema(input_dir: Path, problems: list[str]) -> dict | None:
                     f"{SCHEMA}: {file_name}, column {column} must be declared integer or number, not string"
                 )
                 ok = False
+        # Extra columns the schema declares are type-checked too, so they need a known type.
+        for column, (col_type, _) in declared.get(file_name, {}).items():
+            if column not in columns and col_type not in KNOWN_TYPES:
+                problems.append(f"{SCHEMA}: {file_name}, column {column} has unknown type '{col_type}'")
+                ok = False
     return declared if ok else None
 
 
@@ -167,9 +174,17 @@ def _read_typed_rows(
     for line_no, cells in enumerate(body, start=2):
         if not cells:
             continue  # a fully blank line carries no data
-        if len(cells) != len(header):
+        if len(cells) < len(header):
+            short = ", ".join(header[len(cells):])
             problems.append(
-                f"{file_name}, line {line_no}: has {len(cells)} values but the header has {len(header)} columns"
+                f"{file_name}, column {short}, line {line_no}: no value (the row has {len(cells)} values "
+                f"but the header has {len(header)} columns)"
+            )
+            continue
+        if len(cells) > len(header):
+            problems.append(
+                f"{file_name}, line {line_no}: {len(cells) - len(header)} extra values after the last "
+                f"column, {header[-1]} (the row has {len(cells)} values but the header has {len(header)} columns)"
             )
             continue
         raw = dict(zip(header, cells))
@@ -221,6 +236,9 @@ def _build_instance(tables: dict[str, list[dict]], problems: list[str]) -> Insta
             continue
         jobs[job_id] = Job(job_id, row["release_time"], row["due_date"], row["weight"])
 
+    if not tables[JOBS]:
+        problems.append(f"{JOBS}, column job_id: no jobs (the file has a header but no rows)")
+
     # Stages: unique ids, and sequence values are exactly 1, 2, ..., number of stages.
     stage_seq: dict[str, int] = {}
     for row in tables[STAGES]:
@@ -233,6 +251,8 @@ def _build_instance(tables: dict[str, list[dict]], problems: list[str]) -> Insta
             )
             continue
         stage_seq[stage_id] = row["sequence"]
+    if not tables[STAGES]:
+        problems.append(f"{STAGES}, column stage_id: no stages (the file has a header but no rows)")
     seq_values = sorted(v for v in stage_seq.values() if v is not None)
     if seq_values != list(range(1, len(stage_seq) + 1)):
         problems.append(
