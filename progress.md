@@ -2,6 +2,48 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-19 (checker)
+
+### What changed
+- Branch `james/checker` (from `main` after the rule-to-beat merge).
+- `src/flowshop/checker.py`: independent checker. It imports nothing from `flowshop`, not even
+  the loader, and reads the CSVs itself with its own stage order taken from the `sequence`
+  column. It checks: each input job exactly once in the sequence (unknown or extra jobs
+  rejected); each job-stage pair exactly once in the schedule with job_id, stage_id, start and
+  completion present and numeric; durations match within 1e-8; release and stage precedence;
+  no overlap on a stage; the same order on every stage. It names the job and stage for each
+  violation. It ignores any other keys (for example objective values a method reports) and
+  recomputes total weighted tardiness, total waiting and makespan from the decision.
+  Exit 0 feasible, 1 infeasible, 2 cannot read the input or decision file.
+- `pixi run check <input_dir> <decision.json>` task. The README documents solve, check and test.
+- `tests/test_checker.py`: the four requested cases plus tolerance boundaries, each
+  constraint, malformed decisions, ignored self-reported values, and two independence tests
+  (no flowshop import in the source; importing the checker loads no other flowshop module).
+- Reviewer subagent findings fixed (see agent_log.md). Not changed: the checker does not
+  enforce schema.json integer types on input (the loader does; the checker only needs numbers),
+  and `int()` is applied to input numbers only when they are already exact integers, which
+  changes no value.
+- docs/team-project-guide.pdf in the repo is the October 7 revision. The task mentioned an
+  October 14 revision; if one exists, it should be added to docs/ and rechecked.
+
+### Test results
+`pixi run test`: 79 passed. Checker runs:
+(a) worked example: feasible, TWT 281, waiting 13, makespan 139.
+(b) rule on development_small: feasible, TWT 1417 (waiting 732, makespan 417).
+(c) J003 at S2 start changed 72 to 73: infeasible, duration violation at J003/S2.
+(d) J002 and J005 swapped in the sequence only: infeasible, same-sequence violation at S1 to S4.
+The rule's decisions on development_medium and development_large are also feasible.
+
+### Current best scores (rule to beat, now checker-verified)
+hand_checkable 281, development_small 1417, development_medium 2371,
+development_large 23015 (total weighted tardiness).
+
+### Next steps
+1. Merge james/checker into main after review.
+2. Loader fixes from the earlier review (see the rule-to-beat entry below).
+3. Iterated Greedy with NEH-style insertion; check every decision it writes with
+   `pixi run check`.
+
 ## 2026-10-19 (rule to beat)
 
 ### What changed
