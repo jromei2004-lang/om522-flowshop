@@ -223,6 +223,50 @@ def test_stage_sequence_gap(tmp_path):
     assert "stages.csv, column sequence" in rejection_messages(inst)
 
 
+def test_short_row_names_the_missing_column(tmp_path):
+    inst = copy_instance("hand_checkable", tmp_path)
+    rows = read_csv(inst / "jobs.csv")
+    rows[2] = rows[2][:-1]  # line 3 loses its weight
+    write_csv(inst / "jobs.csv", rows)
+    assert "jobs.csv, column weight, line 3: no value" in rejection_messages(inst)
+
+
+def test_long_row_names_the_last_column(tmp_path):
+    inst = copy_instance("hand_checkable", tmp_path)
+    rows = read_csv(inst / "jobs.csv")
+    rows[2].append("99")
+    write_csv(inst / "jobs.csv", rows)
+    assert "jobs.csv, line 3: 1 extra values after the last column, weight" in rejection_messages(inst)
+
+
+@pytest.mark.parametrize("file_name, message", [
+    ("jobs.csv", "jobs.csv, column job_id: no jobs"),
+    ("stages.csv", "stages.csv, column stage_id: no stages"),
+])
+def test_header_only_file_is_rejected(tmp_path, file_name, message):
+    inst = copy_instance("hand_checkable", tmp_path)
+    write_csv(inst / file_name, read_csv(inst / file_name)[:1])
+    assert message in rejection_messages(inst)
+
+
+def test_non_ascii_digits_are_not_an_integer(tmp_path):
+    inst = copy_instance("hand_checkable", tmp_path)
+    set_cell(inst / "jobs.csv", 2, "release_time", "\u0661\u0663")  # Arabic-Indic "13"
+    assert "jobs.csv, column release_time, line 2: value" in rejection_messages(inst)
+
+
+def test_extra_column_with_unknown_type_is_rejected(tmp_path):
+    import json
+    inst = copy_instance("hand_checkable", tmp_path)
+    rows = read_csv(inst / "jobs.csv")
+    write_csv(inst / "jobs.csv", [r + (["ship_date"] if i == 0 else ["2026-10-19"]) for i, r in enumerate(rows)])
+    schema_path = inst / "schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema["files"]["jobs.csv"]["columns"].append({"name": "ship_date", "type": "date", "nullable": False})
+    schema_path.write_text(json.dumps(schema, indent=2), encoding="utf-8")
+    assert "schema.json: jobs.csv, column ship_date has unknown type 'date'" in rejection_messages(inst)
+
+
 def test_all_problems_reported_together(tmp_path):
     inst = copy_instance("hand_checkable", tmp_path)
     set_cell(inst / "jobs.csv", 2, "weight", "x")
@@ -254,6 +298,18 @@ def test_valid_input_exits_zero_and_writes_decision(tmp_path):
 def test_output_same_as_input_refused(tmp_path):
     inst = copy_instance("hand_checkable", tmp_path)
     assert main([str(inst), str(inst)]) == 1
+
+
+def test_output_inside_input_refused(tmp_path):
+    inst = copy_instance("hand_checkable", tmp_path)
+    before = sorted(p.name for p in inst.iterdir())
+    assert main([str(inst), str(inst / "out")]) == 1
+    assert sorted(p.name for p in inst.iterdir()) == before
+
+
+def test_output_beside_input_allowed(tmp_path):
+    inst = copy_instance("hand_checkable", tmp_path)
+    assert main([str(inst), str(tmp_path / "hand_checkable_out")]) == 0
 
 
 def test_input_files_unchanged(tmp_path):

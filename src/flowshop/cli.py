@@ -67,8 +67,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.iterations < 0 or args.d < 1 or args.tp < 0 or args.time_limit <= 0:
         parser.error("need iterations >= 0, d >= 1, tp >= 0, and time-limit > 0")
 
-    if args.output_dir.resolve() == args.input_dir.resolve():
-        print("Output directory must be different from the input directory.", file=sys.stderr)
+    # Results never go inside the input directory, so input files stay untouched.
+    if args.output_dir.resolve().is_relative_to(args.input_dir.resolve()):
+        print("Output directory must not be the input directory or inside it.", file=sys.stderr)
         return 1
 
     # Remove a decision.json left by an earlier run, so a rejected input never leaves

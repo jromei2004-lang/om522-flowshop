@@ -1,5 +1,22 @@
 # om522-flowshop
+
+Team: John Romei, James Conte
+
 OM 522 Option 6 flow shop decision tool
+
+## Commands
+
+- `pixi run solve <input_dir> <output_dir>` writes `decision.json` and `summary.txt`. It runs
+  Iterated Greedy with fixed default settings; `--method rule` runs the rule to beat instead.
+- `pixi run check <input_dir> <decision.json>` runs the independent checker. It reads only
+  the input CSV files and the decision file, reports each violated constraint with its job
+  and stage, and recomputes total weighted tardiness, total waiting between stages, and
+  makespan. Exit status: 0 feasible, 1 infeasible, 2 the input or decision file cannot be read.
+- `pixi run test` runs all tests.
+- `pixi run tune` runs the Iterated Greedy tuning grid on the development instances and
+  writes `results/tuning.csv`. It is resumable: finished runs are skipped.
+
+## Iterated Greedy notes
 
 Speed tool: Iterated Greedy uses numba (`src/flowshop/fast_eval.py`) only to make schedule evaluation fast. It is a general-purpose compiler, not a scheduling solver, and its logic matches the plain-Python reference `src/flowshop/schedule.py`. `tests/test_fast_eval.py` checks that both give exactly the same start times, completions, and weighted tardiness on hand_checkable and all three development instances, and every decision.json is written from `schedule.py`.
 

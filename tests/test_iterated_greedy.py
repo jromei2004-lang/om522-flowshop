@@ -15,7 +15,7 @@ import pytest
 from flowshop import iterated_greedy, rule_to_beat
 from flowshop.cli import main
 from flowshop.iterated_greedy import Settings
-from flowshop.loader import load_instance
+from flowshop.loader import Instance, InputError, load_instance
 from flowshop.schedule import build_schedule, total_weighted_tardiness
 
 DATA = Path(__file__).resolve().parent.parent / "data"
@@ -86,7 +86,12 @@ def test_one_job(tmp_path):
 
 
 def test_zero_jobs(tmp_path):
-    result = iterated_greedy.solve(keep_jobs(tmp_path, set()), Settings(iterations=10))
+    # The loader rejects a jobs.csv with no rows, so solve never sees this through the
+    # command line. Iterated Greedy should still handle it if called directly.
+    with pytest.raises(InputError):
+        keep_jobs(tmp_path, set())
+    empty = Instance(jobs={}, stages=["S1", "S2", "S3", "S4"], processing_time={})
+    result = iterated_greedy.solve(empty, Settings(iterations=10))
     assert result.sequence == []
     assert result.twt == 0
 
