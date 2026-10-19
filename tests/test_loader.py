@@ -242,9 +242,13 @@ def test_stale_decision_removed_on_bad_input(tmp_path):
     assert not (out / "decision.json").exists()
 
 
-def test_valid_input_exits_zero(tmp_path, capsys):
-    assert main([str(DATA / "hand_checkable"), str(tmp_path / "out")]) == 0
-    assert "Input OK: 6 jobs, 4 stages" in capsys.readouterr().out
+def test_valid_input_exits_zero_and_writes_decision(tmp_path):
+    # Guard for required tests 2 and 3: valid input does write decision.json, so their
+    # "no decision.json" assertions can actually fail if rejection is broken.
+    out = tmp_path / "out"
+    assert main([str(DATA / "hand_checkable"), str(out)]) == 0
+    assert (out / "decision.json").is_file()
+    assert (out / "summary.txt").is_file()
 
 
 def test_output_same_as_input_refused(tmp_path):
