@@ -51,6 +51,41 @@ checker. A better measure never makes up for an infeasible decision.
 2. The supplied edge case is rejected as the brief specifies.
 3. A copied instance with a required column deleted is rejected with a clear message.
 
+## Option 6 specifics from the brief
+- Primary measure: total weighted tardiness, using each job's completion at the last
+  stage. It is 281 on the worked example.
+- Secondary measure: total waiting between stages, i.e. start at a stage minus
+  completion at the previous stage, summed over jobs and every stage after the first.
+  It is 13 on the worked example (`downstream_waiting_time` in metrics.json).
+- Stage count varies: hand_checkable and edge_case have 4 stages, all others have 8.
+  Always read the stage count and order from stages.csv. Never hardcode 4 or 8.
+- The edge case has a processing time of 0 (J001 at S1). It is malformed input and
+  must be rejected: message naming the file and column, no decision.json, nonzero
+  exit. This is required test 2.
+- Sizes: hand_checkable 6 jobs, edge_case 10, development_small 15,
+  development_medium 45, development_large 120. The held-out case has 60 jobs.
+- Stress test: the uncertain input is processing times. Use the fixed-plan execution
+  rule: keep the planned sequence and start each operation as early as the realized
+  times allow. Run it on development_medium with 30 scenarios saved to files first.
+- Researched method: Iterated Greedy (Ruiz and Stützle 2007, EJOR) with NEH-style
+  insertion (Nawaz, Enscore, and Ham 1983, Omega) adapted to weighted tardiness.
+
+## Agents
+Project subagents live in `.claude/agents/`.
+- `reviewer`: read-only. Checks code against the brief, the guide, and this file after
+  any method, checker, or test change, and lists findings with file and line.
+- `tuner`: runs `pixi run tune`, analyzes `results/tuning.csv` against the rule to beat,
+  appends a summary line to findings.md, and suggests the next grid. Development
+  instances only, never the held-out case.
+
+Only the main session edits method code. Subagents report; they do not change `src/`.
+
+## Session handoff
+- At the start of every session: run `git pull`, then read `progress.md`.
+- At the end of every session: update `progress.md` with what changed, test results,
+  current best scores, and next steps. Add a new dated entry at the top; keep old
+  entries.
+
 ## Cross-platform (one teammate on Windows, one on Mac)
 - pixi.toml must list platforms = ["win-64", "osx-arm64", "osx-64"] so the lock
   file works on both machines.
