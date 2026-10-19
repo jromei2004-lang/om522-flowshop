@@ -131,7 +131,7 @@ def test_decimal_times_not_rounded(tmp_path):
     path.write_text(text, encoding="utf-8")
 
     out = tmp_path / "out"
-    assert main([str(inst), str(out)]) == 0
+    assert main([str(inst), str(out), "--method", "rule"]) == 0
     decision = read_json(out / "decision.json")
     first = decision["schedule"][0]
     assert (first["job_id"], first["stage_id"]) == ("J001", "S1")

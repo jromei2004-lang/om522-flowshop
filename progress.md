@@ -2,6 +2,42 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-19 (Iterated Greedy)
+
+### What changed
+- Branch `john/iterated-greedy` (from `john/rule-to-beat`).
+- numba added through pixi (locked for win-64, osx-arm64, osx-64).
+- `src/flowshop/fast_eval.py`: numba versions of the schedule.py timing with
+  cache=True and the prefix shortcut (insert at k: only recompute from k onward).
+  schedule.py stays the plain-Python reference.
+- `src/flowshop/iterated_greedy.py`: EDD start, NEH-style insertion in EDD order, then
+  destruction, construction, local search, and constant-temperature acceptance; stops
+  on iteration count with a safety time cap. Never worse than EDD. Supports iteration
+  checkpoints for tuning.
+- `solve` now defaults to Iterated Greedy (`--method rule` still available), with
+  `--iterations --d --seed --tp --time-limit`. Reported time includes numba compile.
+- `src/flowshop/tune.py` and `pixi run tune`: grid d 2/4/6/8, iterations
+  500/1000/2000, Tp 0.2/0.4/0.8, seeds 1 to 5, dev instances only. Writes
+  results/tuning.csv.
+- Reviewer findings fixed or documented (see agent_log.md). README documents the
+  temperature scaling as our assumption and the other adaptations.
+
+### Test results
+`pixi run test`: 58 passed (numba matches schedule.py exactly on all four instances,
+prefix shortcut matches full recompute, IG never worse than EDD, same seed same
+decision across processes, edge cases, tune checkpoints equal shorter runs).
+
+### Current best scores (IG provisional defaults; not yet checker-verified)
+hand_checkable 233 (rule 281), development_small 21 (1417), development_medium 58
+(2371), development_large 4276 (23015). Large takes about 25 s.
+
+### Next steps
+1. Analyze results/tuning.csv with the tuner subagent; pick defaults.
+2. Run James's checker on every decision (tuning rows have checker = pending).
+3. Ask the Mac teammate to run `pixi run solve` on development_small and compare
+   decision.json with ours (cross-platform reproducibility).
+4. Loader fixes from the first review; README method write-up (guide 2.3).
+
 ## 2026-10-19 (rule to beat)
 
 ### What changed
