@@ -51,6 +51,7 @@ def test_compare_end_to_end_skips_missing_method(tmp_path, capsys):
     assert float(small["total_weighted_tardiness"]) == 1417
     assert (hand["jobs"], hand["stages"]) == ("6", "4")
     assert hand["cpu"] and hand["runtime_s"] != ""
+    assert hand["time_limit_s"] == "none"  # the rule has no time limit
 
     for name in ("gantt_rule_hand_checkable.png", "gantt_rule_development_small.png", "comparison_bars.png"):
         assert (results / "figures" / name).stat().st_size > 0
@@ -67,7 +68,10 @@ def test_infeasible_decision_gets_no_measures_and_no_gantt(tmp_path, monkeypatch
             d["schedule"][0]["start"] += 1  # duration no longer matches
             d["total_weighted_tardiness"] = 0  # a self-reported value the checker must ignore
             (out / "decision.json").write_text(json.dumps(d), encoding="utf-8")
-            (out / "summary.txt").write_text("Computation time (s): 0.5000\n", encoding="utf-8")
+            (out / "summary.txt").write_text(
+                "Settings: iterations=10, d=4, seed=1, Tp=0.4, safety time cap=600 s\n"
+                "Stopping rule: iteration count reached; iterations run: 10\n"
+                "Computation time (s): 0.5000\n", encoding="utf-8")
             return subprocess.CompletedProcess(args, 0, "", "")
         if args[0] == "check":  # the real checker
             return subprocess.run([sys.executable, "-m", "flowshop.checker", *args[1:]],
@@ -79,6 +83,8 @@ def test_infeasible_decision_gets_no_measures_and_no_gantt(tmp_path, monkeypatch
     assert row["feasible"] is False
     assert row["total_weighted_tardiness"] == row["total_waiting"] == row["makespan"] == ""
     assert row["runtime_s"] == 0.5
+    assert row["time_limit_s"] == 600.0
+    assert row["stopping_rule"] == "iteration count reached; iterations run: 10"
     assert "infeasible" in row["note"]
     assert report["feasible"] is False
 
@@ -109,3 +115,30 @@ def test_job_colors_use_ordinal_ramp_past_eight_jobs():
     colors = plots.job_colors(seq)
     assert len(set(colors.values())) == 15
     assert colors["J001"].lower() == plots.ORDINAL_BLUE[0] and colors["J015"].lower() == plots.ORDINAL_BLUE[-1]
+
+
+def test_crashed_check_never_reuses_an_old_report(tmp_path, monkeypatch):
+    out = tmp_path / "runs" / "rule" / "hand_checkable"
+    out.mkdir(parents=True)
+    (out / "check_report.json").write_text(json.dumps(
+        {"feasible": True, "violations": [], "measures": {"total_weighted_tardiness": 1,
+         "total_waiting": 1, "makespan": 1}, "stages": [], "sequence": [], "operations": []}), encoding="utf-8")
+
+    def fake_pixi(*args):
+        if args[0] == "solve":
+            shutil.copy(SOLUTION, out / "decision.json")
+            (out / "summary.txt").write_text("Computation time (s): 0.1\n", encoding="utf-8")
+            return subprocess.CompletedProcess(args, 0, "", "")
+        return subprocess.CompletedProcess(args, 1, "", "Traceback ... crash")  # writes no report
+
+    monkeypatch.setattr(compare, "pixi", fake_pixi)
+    row, report = compare.run_one("rule", "hand_checkable", DATA, tmp_path, "cpu")
+    assert report is None
+    assert row["feasible"] is False and row["total_weighted_tardiness"] == ""
+    assert "check exited 1" in row["note"]
+
+
+@pytest.mark.parametrize("value, text", [(281, "281"), (23015.0, "23,015"), (1234567, "1,234,567"),
+                                          (2371.0004, "2,371.0004"), (0.1 + 0.2, "0.3")])
+def test_measure_labels_are_not_rounded_to_hide_differences(value, text):
+    assert plots.fmt(value) == text

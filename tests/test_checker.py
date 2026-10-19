@@ -2,6 +2,7 @@
 
 import ast
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -325,7 +326,6 @@ def test_edge_case_input_cannot_be_checked(tmp_path):
 
 @pytest.mark.parametrize("file_name", ["jobs.csv", "stages.csv"])
 def test_input_file_with_header_only_exits_2(tmp_path, file_name):
-    import shutil
     inst = tmp_path / "inst"
     shutil.copytree(HAND, inst)
     header = (inst / file_name).read_text(encoding="utf-8").splitlines()[0]
@@ -336,7 +336,6 @@ def test_input_file_with_header_only_exits_2(tmp_path, file_name):
 
 
 def test_blank_identifier_in_input_exits_2(tmp_path):
-    import shutil
     inst = tmp_path / "inst"
     shutil.copytree(HAND, inst)
     text = (inst / "jobs.csv").read_text(encoding="utf-8").replace("J006,", ",", 1)
@@ -347,6 +346,12 @@ def test_blank_identifier_in_input_exits_2(tmp_path):
 
 
 # ---------- --report output (used by pixi run compare and the charts) ----------
+
+def write_report_for(decision_path: Path, tmp_path: Path, input_dir: Path = HAND) -> tuple[int, dict | None]:
+    report_path = tmp_path / "report.json"
+    code = checker.main([str(input_dir), str(decision_path), "--report", str(report_path)])
+    return code, read_json(report_path) if report_path.is_file() else None
+
 
 def test_report_matches_worked_example(tmp_path):
     report_path = tmp_path / "report.json"
@@ -359,29 +364,81 @@ def test_report_matches_worked_example(tmp_path):
     solution = read_json(SOLUTION)
     assert report["feasible"] is True and report["violations"] == []
     assert report["measures"] == {"total_weighted_tardiness": 281, "total_waiting": 13, "makespan": 139}
+    assert report["diagnostic_measures"] is None
     assert report["stages"] == ["S1", "S2", "S3", "S4"]
     assert report["sequence"] == solution["sequence"]
-    ops = {(o["job_id"], o["stage_id"]): (o["start"], o["completion"]) for o in report["operations"]}
-    assert ops == {(e["job_id"], e["stage_id"]): (e["start"], e["completion"]) for e in solution["schedule"]}
+    # Same operations, one each, in sequence order then stage order (as solution.json lists them).
+    assert report["operations"] == solution["schedule"]
 
 
-def test_report_completion_is_recomputed_from_input(tmp_path):
+def test_report_operations_and_measures_use_the_same_completions(tmp_path):
     d = read_json(SOLUTION)
-    entry(d, "J004", "S4")["completion"] = 139 + 5e-9  # within tolerance; report uses start + p
-    path = write_json(tmp_path / "d.json", d)
-    report_path = tmp_path / "report.json"
-    assert checker.main([str(HAND), str(path), "--report", str(report_path)]) == 0
-    op = next(o for o in read_json(report_path)["operations"] if (o["job_id"], o["stage_id"]) == ("J004", "S4"))
-    assert op["completion"] == 139
+    entry(d, "J004", "S4")["completion"] = 139 + 5e-9  # within tolerance
+    code, report = write_report_for(write_json(tmp_path / "d.json", d), tmp_path)
+    assert code == 0
+    op = next(o for o in report["operations"] if (o["job_id"], o["stage_id"]) == ("J004", "S4"))
+    assert op["completion"] == 139 + 5e-9
+    assert report["measures"]["makespan"] == max(o["completion"] for o in report["operations"])
 
 
-def test_report_written_for_infeasible_decision(tmp_path):
+def test_report_stage_order_follows_sequence_column(tmp_path):
+    inst = tmp_path / "inst"
+    shutil.copytree(HAND, inst)
+    lines = (inst / "stages.csv").read_text(encoding="utf-8").splitlines()
+    (inst / "stages.csv").write_text("\n".join([lines[0]] + lines[:0:-1]) + "\n", encoding="utf-8")  # S4..S1
+    code, report = write_report_for(SOLUTION, tmp_path, inst)
+    assert code == 0
+    assert report["stages"] == ["S1", "S2", "S3", "S4"]
+
+
+def test_report_for_infeasible_decision_keeps_the_decision_and_withholds_measures(tmp_path):
     d = read_json(SOLUTION)
     entry(d, "J003", "S2")["start"] = 73
-    path = write_json(tmp_path / "d.json", d)
-    report_path = tmp_path / "report.json"
-    assert checker.main([str(HAND), str(path), "--report", str(report_path)]) == 1
-    report = read_json(report_path)
+    code, report = write_report_for(write_json(tmp_path / "d.json", d), tmp_path)
+    assert code == 1
     assert report["feasible"] is False
-    assert report["violations"][0] == {"rule": "duration", "job_id": "J003", "other_job_id": None,
-                                       "stage_id": "S2", "message": report["violations"][0]["message"]}
+    assert [(v["rule"], v["job_id"], v["other_job_id"], v["stage_id"]) for v in report["violations"]] == [
+        ("duration", "J003", None, "S2")]
+    assert "processing_times.csv gives 3" in report["violations"][0]["message"]
+    assert report["measures"] is None
+    assert report["diagnostic_measures"]["total_weighted_tardiness"] == 281
+    # The flagged operation is reported as the decision has it, not corrected.
+    op = next(o for o in report["operations"] if (o["job_id"], o["stage_id"]) == ("J003", "S2"))
+    assert (op["start"], op["completion"]) == (73, 75)
+
+
+def test_report_for_incomplete_decision(tmp_path):
+    d = read_json(SOLUTION)
+    d["schedule"].remove(entry(d, "J006", "S3"))
+    code, report = write_report_for(write_json(tmp_path / "d.json", d), tmp_path)
+    assert code == 1
+    assert report["operations"] == []
+    assert report["measures"] is None and report["diagnostic_measures"] is None
+    assert report["sequence"] == d["sequence"]
+
+
+def test_report_for_invalid_sequence(tmp_path):
+    d = read_json(SOLUTION)
+    d["sequence"][0] = "J999"
+    code, report = write_report_for(write_json(tmp_path / "d.json", d), tmp_path)
+    assert code == 1
+    assert report["sequence"] is None and report["measures"] is None
+
+
+def test_report_for_non_object_decision_still_has_stages(tmp_path):
+    code, report = write_report_for(write_json(tmp_path / "d.json", [1, 2]), tmp_path)
+    assert code == 1
+    assert report["stages"] == ["S1", "S2", "S3", "S4"]
+
+
+def test_stale_report_removed_when_input_cannot_be_checked(tmp_path):
+    report_path = tmp_path / "report.json"
+    report_path.write_text('{"feasible": true}', encoding="utf-8")
+    assert checker.main([str(DATA / "edge_case"), str(SOLUTION), "--report", str(report_path)]) == 2
+    assert not report_path.exists()
+
+
+def test_unwritable_report_exits_3(tmp_path):
+    report_dir = tmp_path / "report.json"
+    report_dir.mkdir()  # a directory cannot be written as a file
+    assert checker.main([str(HAND), str(SOLUTION), "--report", str(report_dir)]) == 3

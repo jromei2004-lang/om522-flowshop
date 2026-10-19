@@ -36,9 +36,13 @@ GANTT_INSTANCES = ["hand_checkable", "development_small"]
 
 COLUMNS = [
     "method", "instance", "jobs", "stages", "feasible",
-    "total_weighted_tardiness", "total_waiting", "makespan", "runtime_s", "cpu", "note",
+    "total_weighted_tardiness", "total_waiting", "makespan",
+    "runtime_s", "time_limit_s", "stopping_rule", "cpu", "note",
 ]
+# Read from summary.txt: the only values the checker cannot recompute.
 RUNTIME_LINE = re.compile(r"Computation time \(s\):\s*([0-9.eE+-]+)")
+TIME_LIMIT_LINE = re.compile(r"time cap=([0-9.eE+-]+)\s*s")
+STOPPING_LINE = re.compile(r"^Stopping rule:\s*(.+)$", re.MULTILINE)
 METHOD_CHOICES = re.compile(r"--method\s+\{([^}]*)\}")
 
 
@@ -103,24 +107,35 @@ def run_one(method: str, instance: str, data_dir: Path, results_dir: Path, cpu: 
         print(f"  {method} on {instance}: {row['note']}\n{solved.stderr}", file=sys.stderr)
         return row, None
 
-    match = RUNTIME_LINE.search((out_dir / "summary.txt").read_text(encoding="utf-8"))
+    summary_path = out_dir / "summary.txt"
+    summary = summary_path.read_text(encoding="utf-8") if summary_path.is_file() else ""
+    match = RUNTIME_LINE.search(summary)
     row["runtime_s"] = float(match.group(1)) if match else ""
+    match = TIME_LIMIT_LINE.search(summary)
+    row["time_limit_s"] = float(match.group(1)) if match else "none"
+    match = STOPPING_LINE.search(summary)
+    row["stopping_rule"] = match.group(1).strip() if match else ""
+    if not summary:
+        row["note"] = "no summary.txt, so no runtime; "
 
     report_path = out_dir / "check_report.json"
+    report_path.unlink(missing_ok=True)  # never read a report left by an earlier run
     checked = pixi("check", str(inst_dir), str(decision), "--report", str(report_path))
     if checked.returncode not in (0, 1) or not report_path.is_file():
-        row["note"] = f"check exited {checked.returncode}: {checked.stderr.strip()}"
+        row["note"] += f"check exited {checked.returncode}: {checked.stderr.strip()}"
         print(f"  {method} on {instance}: {row['note']}", file=sys.stderr)
         return row, None
     with report_path.open(encoding="utf-8") as f:
         report = json.load(f)
 
     row["feasible"] = report["feasible"]
+    if report["sequence"] is not None:  # sizes as the checker saw them
+        row["jobs"], row["stages"] = len(report["sequence"]), len(report["stages"])
     if report["feasible"]:
         for key in ("total_weighted_tardiness", "total_waiting", "makespan"):
             row[key] = report["measures"][key]
     else:
-        row["note"] = f"infeasible: {len(report['violations'])} violations (see check_report.json)"
+        row["note"] += f"infeasible: {len(report['violations'])} violations (see check_report.json)"
     return row, report
 
 

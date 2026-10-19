@@ -28,6 +28,15 @@ METHOD_COLORS = {"rule": CATEGORICAL[0], "ig": CATEGORICAL[1]}
 METHOD_LABELS = {"rule": "Rule to beat (EDD)", "ig": "Iterated Greedy"}
 
 
+def fmt(value: float) -> str:
+    """A measure for a label: thousands separators, never scientific notation, and up to
+    9 decimals (beyond the 0.001 that decides whether a method beats the rule)."""
+    v = float(value)
+    if v.is_integer():
+        return f"{int(v):,}"
+    return f"{v:,.9f}".rstrip("0").rstrip(".")
+
+
 def _style(ax) -> None:
     ax.set_facecolor(SURFACE)
     for side in ("top", "right"):
@@ -95,8 +104,8 @@ def gantt(report: dict, title: str):
     ax.grid(axis="x", color=GRID, linewidth=0.8)
     ax.set_axisbelow(True)
     measures = report["measures"]
-    ax.set_title(f"{title}\nweighted tardiness {measures['total_weighted_tardiness']:g}, "
-                 f"waiting {measures['total_waiting']:g}, makespan {measures['makespan']:g} "
+    ax.set_title(f"{title}\nweighted tardiness {fmt(measures['total_weighted_tardiness'])}, "
+                 f"waiting {fmt(measures['total_waiting'])}, makespan {fmt(measures['makespan'])} "
                  "(times verified by the checker)", loc="left", fontsize=10, color=TEXT)
     handles = [Patch(facecolor=colors[j], label=j) for j in sequence]
     note = "Jobs in sequence order" + (" (color darkens along the sequence)" if len(sequence) > 8 else "")
@@ -133,7 +142,7 @@ def comparison_bars(rows: list[dict], methods: list[str], instances: list[str]):
                     continue
                 ax.bar(k, v, width=0.6, color=METHOD_COLORS.get(method, CATEGORICAL[k % 2]),
                        edgecolor=SURFACE, linewidth=1.0)
-                ax.text(k, v, f"{v:,.0f}" if float(v).is_integer() else f"{v:,.3f}",
+                ax.text(k, v, fmt(v),
                         ha="center", va="bottom", fontsize=8, color=TEXT)
             ax.set_xticks(range(len(methods)), [m for m in methods], fontsize=8)
             ax.set_xlim(-0.6, len(methods) - 0.4)

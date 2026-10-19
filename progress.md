@@ -11,12 +11,17 @@ Newest entry first. See "Session handoff" in CLAUDE.md for when to update this f
   and the three development instances, runs `pixi run solve <inst> results/runs/<m>/<inst>
   --method <m>`, then `pixi run check ... --report check_report.json`. Writes
   `results/comparison.csv`: method, instance, jobs, stages, feasible, total weighted tardiness,
-  total waiting, makespan, runtime_s, cpu, note. Measures come only from the checker report;
-  runtime_s is the method's computation time from summary.txt (the checker cannot recompute
-  it). A method missing from `solve --help` is skipped with a message (ig today).
-- Checker: new `--report <file.json>` option (status, violations, measures, stage order,
-  sequence, and every operation with completion recomputed as start + processing time).
-  Checks and console output are unchanged; it still imports nothing from flowshop.
+  total waiting, makespan, runtime_s, time_limit_s, stopping_rule, cpu, note. Measures come
+  only from the checker report; runtime, time limit and stopping rule come from summary.txt
+  (the checker cannot recompute them; the guide asks the comparison to state the time limit).
+  A method missing from `solve --help` is skipped with a message (ig today).
+- Checker: new `--report <file.json>` option (status, violations, stage order, sequence, every
+  operation's start and completion as the decision gives them, and the measures computed from
+  those same values). For an infeasible decision `measures` is null and the values are under
+  `diagnostic_measures`. An old report is deleted before checking. Exit 3 now means the checker
+  itself failed, so a crash can never look like "infeasible" (1). Checks are unchanged; it still
+  imports nothing from flowshop.
+- Reviewer subagent run on the checker change; fixes for its findings are listed in agent_log.md.
 - `src/flowshop/plots.py`: Gantt per method for hand_checkable and development_small (one row
   per stage, one color per job, the same at every stage; job ids on bars) and
   `comparison_bars.png` (one panel per instance and measure, each with its own scale). Charts
@@ -26,7 +31,7 @@ Newest entry first. See "Session handoff" in CLAUDE.md for when to update this f
   and commit them after ig is merged so they show both methods.
 
 ### Test results
-`pixi run test`: 96 passed (87 + 6 compare/chart tests + 3 checker report tests).
+`pixi run test`: 108 passed (87 + 21 new compare, chart, and checker-report tests).
 `pixi run compare` (rule only, ig skipped) on an Apple M2 in about 2.5 s:
 hand_checkable 281 / waiting 13, development_small 1417 / 732, development_medium 2371 / 2040,
 development_large 23015 / 7863, all feasible per the checker. Rule runtimes round to 0.0000 to
