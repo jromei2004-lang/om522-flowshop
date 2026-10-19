@@ -42,6 +42,7 @@ def test_compare_end_to_end_skips_missing_method(tmp_path, capsys):
     assert code == 0
     assert "Skipping not_a_method" in capsys.readouterr().out
 
+    assert b"\r" not in (results / "comparison.csv").read_bytes()
     rows = read_rows(results / "comparison.csv")
     assert list(rows[0]) == compare.COLUMNS
     assert [(r["method"], r["instance"]) for r in rows] == [("rule", "hand_checkable"), ("rule", "development_small")]

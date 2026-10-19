@@ -172,7 +172,8 @@ def main(argv: list[str] | None = None) -> int:
     args.results_dir.mkdir(parents=True, exist_ok=True)
     csv_path = args.results_dir / "comparison.csv"
     with csv_path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=COLUMNS)
+        # "\n", not csv's default "\r\n", so the file is identical on Windows and Mac.
+        writer = csv.DictWriter(f, fieldnames=COLUMNS, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     print(f"Wrote {csv_path}")
