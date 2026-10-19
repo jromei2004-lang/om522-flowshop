@@ -1,0 +1,9 @@
+method,instance,jobs,stages,feasible,total_weighted_tardiness,total_waiting,makespan,runtime_s,time_limit_s,stopping_rule,cpu,note
+rule,hand_checkable,6,4,True,281,13,139,0.0,none,single construction pass (no search),Apple M2,
+rule,development_small,15,8,True,1417,732,417,0.0,none,single construction pass (no search),Apple M2,
+rule,development_medium,45,8,True,2371,2040,781,0.0001,none,single construction pass (no search),Apple M2,
+rule,development_large,120,8,True,23015,7863,1812,0.0006,none,single construction pass (no search),Apple M2,
+ig,hand_checkable,6,4,True,233,37,136,0.1914,480.0,iteration count reached (1000); iterations run: 1000,Apple M2,
+ig,development_small,15,8,True,21,261,357,0.3628,480.0,iteration count reached (1000); iterations run: 1000,Apple M2,
+ig,development_medium,45,8,True,58,1010,756,1.0857,480.0,iteration count reached (1000); iterations run: 1000,Apple M2,
+ig,development_large,120,8,True,4276,3722,1804,7.9895,480.0,iteration count reached (1000); iterations run: 1000,Apple M2,
