@@ -2,6 +2,40 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-19 (tuning started, not finished)
+
+### What changed
+- The full tuning grid (`pixi run tune`) was started on John's laptop and stopped on
+  purpose after 85 of 180 runs (255 of 540 rows): all of development_small and 25 of 60
+  development_medium runs. None of development_large has run.
+- `pixi run tune` is now resumable: runs that already have every iteration row in
+  results/tuning.csv are skipped. Rows of a run that stopped partway, and a cut-off last
+  line, are dropped and that run is redone. Results are deterministic, so a resumed grid
+  gives the same rows as an uninterrupted one (except runtimes). `--fresh` starts over.
+- The partial results/tuning.csv stays on John's laptop only. It is not committed.
+
+### Test results
+`pixi run test`: 61 passed (adds resume tests: skips finished runs, same rows as an
+uninterrupted run, cleans a partial run and a cut-off line, refuses a file with other
+columns).
+
+### Current best scores
+Unchanged from the previous entry (IG provisional defaults: hand_checkable 233,
+small 21, medium 58, large 4276; not yet checker-verified).
+
+### Next steps
+1. Tuning: run `pixi run tune` again on John's laptop to finish the remaining 95 runs
+   (35 medium, 60 large; about 1.5 hours). Keep the laptop otherwise idle, since
+   runtime is recorded. Then analyze with the tuner subagent, pick defaults, and commit
+   the complete results/tuning.csv.
+2. James's checker: merge it, run it on the rule's and IG's decisions for all four
+   instances, and fill in the `checker` column of the tuning rows.
+3. Prototype plan: video of at most 10 minutes (fresh instance copied to a new path,
+   both methods, checker confirming both, initial comparison on at least three
+   instances, the uncertain input we will vary, and each member's walk-through of one
+   agent-drafted component). Also: `pixi run compare`, the README method write-up
+   (guide 2.1 and 2.3), and the open loader fixes.
+
 ## 2026-10-19 (Iterated Greedy)
 
 ### What changed
