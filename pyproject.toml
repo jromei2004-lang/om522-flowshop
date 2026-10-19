@@ -1,0 +1,15 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "flowshop"
+version = "0.1.0"
+description = "OM 522 Option 6: permutation flow shop decision tool"
+requires-python = ">=3.12"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/flowshop"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
