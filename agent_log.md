@@ -2,6 +2,31 @@
 
 Mistakes the coding agent made that we caught, newest first.
 
+## 2026-10-19 (compare, branch james/compare, Claude Code)
+
+Caught by the reviewer subagent on the checker's new --report option:
+- **Two completion sources.** The report gave each completion as start + processing time,
+  while the measures used the decision's completion, so the two could disagree by up to 1e-8.
+  Worse, for a decision that failed the duration check the report "corrected" the flagged
+  operation (J003/S2 shown as [73, 76] instead of the decision's [73, 75]). Fixed: the report
+  uses the decision's own start and completion, the same values the measures use.
+- **Measures for infeasible decisions looked like results.** Now `measures` is null when
+  infeasible and the values sit under `diagnostic_measures`.
+- **A crashed check could reuse an old report.** A checker crash exited 1 (same as
+  "infeasible") and compare read whatever check_report.json was left from the previous run.
+  Fixed: the checker deletes an old report first and exits 3 on its own errors; compare also
+  deletes the report before checking.
+- **Chart labels rounded measures** (`:g` switches to scientific notation past 6 digits;
+  `.3f` could hide a 0.0005 difference). Labels now show up to 9 decimals.
+- **No time limit in the comparison**, which the guide (2.6) requires. Added time_limit_s and
+  stopping_rule columns from summary.txt.
+- **Weak report tests:** a message compared with itself, operations compared as a dict (hides
+  duplicates), stage order tested only on an instance whose rows were already in order, and no
+  tests for incomplete, invalid-sequence, or unreadable cases. All replaced or added.
+
+Caught by the agent: a test used `shutil` without importing it at the top of the file (the
+earlier tests imported it inside functions). The test failed with NameError; fixed.
+
 ## 2026-10-19: reviewer pass on loader (branch loader)
 Caught by the reviewer subagent (read-only review against the guide and CLAUDE.md).
 - A row with the wrong number of values was rejected with a message naming the file
@@ -34,6 +59,7 @@ first commit of the method:
   NEH, tiny cross-platform exp risk). Documented in the README.
 - Still open: the README does not yet describe each method as guide Section 2.3
   requires (representation, steps, stopping rule, seed, limitations).
+
 
 ## 2026-10-19 (checker, branch james/checker, Claude Code)
 

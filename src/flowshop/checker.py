@@ -18,7 +18,16 @@ Constraints checked, each with tolerance 1e-8 as in the guide, Section 4.3:
   - no two jobs overlap on a stage (start inclusive, completion exclusive);
   - the order of jobs on every stage is the sequence.
 
-Exit status: 0 feasible, 1 infeasible, 2 the input files or decision file cannot be read.
+Exit status: 0 feasible, 1 infeasible, 2 the input files or decision file cannot be read,
+3 the checker itself failed (a bug or an unwritable report), so no result can be trusted.
+
+With --report <file.json> the checker also writes its result as JSON: status,
+violations, the stage order from stages.csv, the sequence, every operation's start and
+completion exactly as the decision gives them (the same values the measures use), and
+the recomputed measures. For an infeasible decision "measures" is null and the values
+appear under "diagnostic_measures" instead, so nothing can mistake them for a result.
+An old report at that path is deleted first, so a failed run never leaves one behind.
+The comparison and the charts read only these reports.
 """
 
 from __future__ import annotations
@@ -28,6 +37,7 @@ import csv
 import json
 import math
 import sys
+import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -64,6 +74,10 @@ class CheckResult:
     violations: list[Violation] = field(default_factory=list)
     measures: dict[str, float] | None = None   # None when the schedule is incomplete
     ignored_keys: list[str] = field(default_factory=list)
+    stages: list[str] = field(default_factory=list)
+    sequence: list[str] | None = None          # None unless every input job appears once
+    # (job_id, stage_id, start, completion) as the decision gives them; empty when incomplete
+    operations: list[tuple[str, str, float, float]] = field(default_factory=list)
 
     @property
     def feasible(self) -> bool:
@@ -180,7 +194,7 @@ def check(input_dir: Path, decision_path: Path) -> CheckResult:
 
 
 def check_decision(jobs, stages, p, decision: object) -> CheckResult:
-    result = CheckResult()
+    result = CheckResult(stages=list(stages))
     if not isinstance(decision, dict):
         result.add("structure", "decision file must be a JSON object with 'sequence' and 'schedule'")
         return result
@@ -284,7 +298,11 @@ def check_decision(jobs, stages, p, decision: object) -> CheckResult:
                 result.add("same sequence", f"position {pos + 1} on this stage is job {order[pos]}, "
                            f"but the sequence has job {sequence[pos]} there", order[pos], sid, sequence[pos])
 
+    if seq_ok:
+        result.sequence = list(sequence)
     if complete:
+        order = result.sequence or list(jobs)
+        result.operations = [(j, s, *times[(j, s)]) for j in order for s in stages]
         last = stages[-1]
         result.measures = {
             "total_weighted_tardiness": sum(
@@ -306,13 +324,20 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="check", description="Independent checker for an option 6 decision.json")
     parser.add_argument("input_dir", type=Path, help="instance directory")
     parser.add_argument("decision", type=Path, help="decision.json to check")
+    parser.add_argument("--report", type=Path, help="also write the result as JSON to this file")
     args = parser.parse_args(argv)
 
+    if args.report is not None and args.report.is_file():
+        args.report.unlink()
     try:
         result = check(args.input_dir, args.decision)
     except CannotCheck as err:
         print(f"Cannot check: {err}", file=sys.stderr)
         return 2
+    except Exception:  # a bug in the checker must never look like "infeasible" (exit 1)
+        traceback.print_exc()
+        print("Checker error: no result. Fix the checker before trusting any decision.", file=sys.stderr)
+        return 3
 
     print(f"Checking {args.decision} against {args.input_dir}")
     if result.ignored_keys:
@@ -332,7 +357,38 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  Total weighted tardiness: {result.measures['total_weighted_tardiness']}")
         print(f"  Total waiting between stages: {result.measures['total_waiting']}")
         print(f"  Makespan: {result.measures['makespan']}")
+    if args.report is not None:
+        try:
+            write_report(result, args.report)
+        except Exception:
+            traceback.print_exc()
+            print(f"Checker error: could not write {args.report}.", file=sys.stderr)
+            return 3
+        print(f"Report written to {args.report}")
     return 0 if result.feasible else 1
+
+
+def write_report(result: CheckResult, path: Path) -> None:
+    report = {
+        "feasible": result.feasible,
+        "violations": [
+            {"rule": v.rule, "job_id": v.job_id, "other_job_id": v.other_job_id,
+             "stage_id": v.stage_id, "message": v.message}
+            for v in result.violations
+        ],
+        "measures": result.measures if result.feasible else None,
+        "diagnostic_measures": None if result.feasible else result.measures,
+        "stages": result.stages,
+        "sequence": result.sequence,
+        "operations": [
+            {"job_id": j, "stage_id": s, "start": start, "completion": completion}
+            for j, s, start, completion in result.operations
+        ],
+    }
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2)
 
 
 if __name__ == "__main__":

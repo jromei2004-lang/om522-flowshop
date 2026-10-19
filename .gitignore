@@ -218,3 +218,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Per-run outputs from pixi run compare (regenerated; comparison.csv and figures are kept)
+results/runs/

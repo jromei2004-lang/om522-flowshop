@@ -2,6 +2,58 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-19 (compare)
+
+### What changed
+- Branch `james/compare`, rebased onto `main` after Iterated Greedy merged (PR #5). Conflicts
+  resolved: pixi.toml keeps `check`, `tune`, and `compare = "python -m flowshop.compare"`;
+  progress.md and agent_log.md keep every entry from both branches.
+- `pixi run compare` (`src/flowshop/compare.py`): for methods rule and ig, on hand_checkable
+  and the three development instances, runs `pixi run solve <inst> results/runs/<m>/<inst>
+  --method <m>`, then `pixi run check ... --report check_report.json`. Writes
+  `results/comparison.csv`: method, instance, jobs, stages, feasible, total weighted tardiness,
+  total waiting, makespan, runtime_s, time_limit_s, stopping_rule, cpu, note. Measures come
+  only from the checker report; runtime, time limit and stopping rule come from summary.txt
+  (the checker cannot recompute them; the guide asks the comparison to state the time limit).
+  A method missing from `solve --help` is skipped with a message (ig today).
+- Checker: new `--report <file.json>` option (status, violations, stage order, sequence, every
+  operation's start and completion as the decision gives them, and the measures computed from
+  those same values). For an infeasible decision `measures` is null and the values are under
+  `diagnostic_measures`. An old report is deleted before checking. Exit 3 now means the checker
+  itself failed, so a crash can never look like "infeasible" (1). Checks are unchanged; it still
+  imports nothing from flowshop.
+- Reviewer subagent run on the checker change; fixes for its findings are listed in agent_log.md.
+- `src/flowshop/plots.py`: Gantt per method for hand_checkable and development_small (one row
+  per stage, one color per job, the same at every stage; job ids on bars) and
+  `comparison_bars.png` (one panel per instance and measure, each with its own scale). Charts
+  read only checker reports. Colors: validated categorical palette for up to 8 jobs, an ordinal
+  blue ramp by sequence position past 8 (development_small has 15 jobs).
+- `results/runs/` is git-ignored. `results/comparison.csv` and `results/figures/` (4 Gantt
+  charts and comparison_bars.png) are committed from the run below.
+
+### Test results
+`pixi run test`: 136 passed. `pixi run compare` on an Apple M2 (13 s for all eight runs; IG
+defaults: 1000 iterations, fixed seed, 480 s safety cap). All eight decisions are feasible per
+the checker, and the values match John's checker-verified numbers:
+
+| instance | rule TWT | IG TWT | rule waiting | IG waiting | IG runtime (s) |
+|---|---|---|---|---|---|
+| hand_checkable | 281 | 233 | 13 | 37 | 0.19 |
+| development_small | 1417 | 21 | 732 | 261 | 0.36 |
+| development_medium | 2371 | 58 | 2040 | 1010 | 1.09 |
+| development_large | 23015 | 4276 | 7863 | 3722 | 7.99 |
+
+IG lowers weighted tardiness on all four instances. Waiting also drops on the three development
+instances but rises on hand_checkable (13 to 37), a tradeoff to mention in the comparison.
+
+### Current best scores
+IG (checker-verified): hand_checkable 233, development_small 21, development_medium 58,
+development_large 4276.
+
+### Next steps
+1. John reviews PR #4; then mark it ready and merge.
+2. Stress test (30 scenarios on development_medium, saved to files first).
+
 ## 2026-10-19 (main merged into john/iterated-greedy; IG checker-verified)
 
 ### What changed
@@ -101,6 +153,7 @@ hand_checkable 233 (rule 281), development_small 21 (1417), development_medium 5
 3. Ask the Mac teammate to run `pixi run solve` on development_small and compare
    decision.json with ours (cross-platform reproducibility).
 4. Loader fixes from the first review; README method write-up (guide 2.3).
+
 ## 2026-10-19 (loader fixes)
 
 ### What changed
