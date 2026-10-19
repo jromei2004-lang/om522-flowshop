@@ -80,6 +80,12 @@ Project subagents live in `.claude/agents/`.
 
 Only the main session edits method code. Subagents report; they do not change `src/`.
 
+## Session handoff
+- At the start of every session: run `git pull`, then read `progress.md`.
+- At the end of every session: update `progress.md` with what changed, test results,
+  current best scores, and next steps. Add a new dated entry at the top; keep old
+  entries.
+
 ## Cross-platform (one teammate on Windows, one on Mac)
 - pixi.toml must list platforms = ["win-64", "osx-arm64", "osx-64"] so the lock
   file works on both machines.
