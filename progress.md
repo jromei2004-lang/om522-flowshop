@@ -2,6 +2,34 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-19 (loader fixes)
+
+### What changed
+- Branch `james/loader-fixes`, rebased onto `main` after the checker merge (PR #2). Closes the five open loader findings from the
+  first review:
+  - Finding 1: a short row names the columns with no value
+    (`jobs.csv, column weight, line 3: no value ...`); a long row names the last column.
+  - Finding 3: a jobs.csv or stages.csv with a header but no rows is rejected.
+  - Finding 4: integer and number patterns use `[0-9]`, not `\d`, which also matched
+    non-ASCII digits that int() and float() accept.
+  - Finding 5: extra columns declared in schema.json must have a known type.
+  - Finding 6: `solve` refuses an output directory inside the input directory (it refused
+    only the same directory before).
+- One test per fix in tests/test_loader.py (8 new tests). Each fix test fails on the old code.
+
+### Test results
+`pixi run test`: 87 passed (79 on main with the checker + 8 new).
+
+### Current best scores
+Unchanged (rule to beat): hand_checkable 281, development_small 1417,
+development_medium 2371, development_large 23015.
+
+### Next steps
+1. Merge james/loader-fixes (PR #3) after John's review. The progress.md conflict with the
+   checker entry is already resolved in the rebase (both entries kept).
+2. Iterated Greedy with NEH-style insertion, fixed seed, iteration-count stopping; make it the
+   solve default and check every decision it writes with `pixi run check`.
+
 ## 2026-10-19 (checker)
 
 ### What changed
@@ -43,6 +71,7 @@ development_large 23015 (total weighted tardiness).
 2. Loader fixes from the earlier review (see the rule-to-beat entry below).
 3. Iterated Greedy with NEH-style insertion; check every decision it writes with
    `pixi run check`.
+
 
 ## 2026-10-19 (rule to beat)
 

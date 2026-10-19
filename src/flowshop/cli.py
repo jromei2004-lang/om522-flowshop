@@ -34,8 +34,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--method", choices=sorted(METHODS), default=DEFAULT_METHOD)
     args = parser.parse_args(argv)
 
-    if args.output_dir.resolve() == args.input_dir.resolve():
-        print("Output directory must be different from the input directory.", file=sys.stderr)
+    # Results never go inside the input directory, so input files stay untouched.
+    if args.output_dir.resolve().is_relative_to(args.input_dir.resolve()):
+        print("Output directory must not be the input directory or inside it.", file=sys.stderr)
         return 1
 
     # Remove a decision.json left by an earlier run, so a rejected input never leaves
