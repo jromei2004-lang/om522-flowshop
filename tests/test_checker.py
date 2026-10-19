@@ -114,7 +114,7 @@ def test_changed_start_time_is_infeasible_and_named(tmp_path):
 
     proc = run_check(HAND, path)
     assert proc.returncode == 1
-    assert "INFEASIBLE" in proc.stdout and "job J003, stage S2" in proc.stdout
+    assert "INFEASIBLE (1 violation)" in proc.stdout and "job J003, stage S2" in proc.stdout
 
 
 @pytest.mark.parametrize("shift", [5e-9, -5e-9])
@@ -170,7 +170,11 @@ def test_swapped_sequence_is_infeasible(tmp_path):
     assert not result.feasible
     assert {v.rule for v in result.violations} == {"same sequence"}
     assert {v.stage_id for v in result.violations} == {"S1", "S2", "S3", "S4"}
-    assert run_check(HAND, path).returncode == 1
+    assert {(v.job_id, v.other_job_id) for v in result.violations} == {("J002", "J005")}
+    proc = run_check(HAND, path)
+    assert proc.returncode == 1
+    assert "INFEASIBLE (4 violations)" in proc.stdout
+    assert "[same sequence] jobs J002 and J005, stage S1:" in proc.stdout
 
 
 # ---------- Other constraint violations ----------
@@ -194,7 +198,7 @@ def test_overlap_on_a_stage(tmp_path):
     entry(d, "J002", "S1").update(start=23, completion=37)  # J001 runs [13, 24) on S1
     result = checker.check(HAND, write_json(tmp_path / "d.json", d))
     overlaps = [v for v in result.violations if v.rule == "overlap"]
-    assert [(v.job_id, v.stage_id) for v in overlaps] == [("J002", "S1")]
+    assert [(v.job_id, v.other_job_id, v.stage_id) for v in overlaps] == [("J002", "J001", "S1")]
     assert "job J001" in overlaps[0].message
 
 

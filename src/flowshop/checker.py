@@ -48,10 +48,12 @@ class Violation:
     message: str
     job_id: str | None = None
     stage_id: str | None = None
+    other_job_id: str | None = None   # the second job, for rules that involve two jobs
 
     def __str__(self) -> str:
         where = ", ".join(p for p in (
-            f"job {self.job_id}" if self.job_id else "",
+            (f"jobs {self.job_id} and {self.other_job_id}" if self.other_job_id
+             else f"job {self.job_id}" if self.job_id else ""),
             f"stage {self.stage_id}" if self.stage_id else "",
         ) if p)
         return f"[{self.rule}] {where + ': ' if where else ''}{self.message}"
@@ -67,8 +69,9 @@ class CheckResult:
     def feasible(self) -> bool:
         return not self.violations
 
-    def add(self, rule: str, message: str, job_id: str | None = None, stage_id: str | None = None) -> None:
-        self.violations.append(Violation(rule, message, job_id, stage_id))
+    def add(self, rule: str, message: str, job_id: str | None = None, stage_id: str | None = None,
+            other_job_id: str | None = None) -> None:
+        self.violations.append(Violation(rule, message, job_id, stage_id, other_job_id))
 
 
 # ---------- reading the input (independent of flowshop.loader) ----------
@@ -271,7 +274,7 @@ def check_decision(jobs, stages, p, decision: object) -> CheckResult:
             if busy is not None and s2 < busy[1] - TOL:
                 s1, c1, j1 = busy
                 result.add("overlap", f"runs [{s2}, {c2}) while job {j1} runs [{s1}, {c1}) on the same stage",
-                           j2, sid)
+                           j2, sid, j1)
             if busy is None or c2 > busy[1]:
                 busy = (s2, c2, j2)
         if seq_ok and complete:
@@ -279,7 +282,7 @@ def check_decision(jobs, stages, p, decision: object) -> CheckResult:
             if order != sequence:
                 pos = next(k for k, (a, b) in enumerate(zip(order, sequence)) if a != b)
                 result.add("same sequence", f"position {pos + 1} on this stage is job {order[pos]}, "
-                           f"but the sequence has job {sequence[pos]} there", order[pos], sid)
+                           f"but the sequence has job {sequence[pos]} there", order[pos], sid, sequence[pos])
 
     if complete:
         last = stages[-1]
@@ -317,7 +320,8 @@ def main(argv: list[str] | None = None) -> int:
     if result.feasible:
         print("Status: FEASIBLE (every required constraint holds)")
     else:
-        print(f"Status: INFEASIBLE ({len(result.violations)} violations)")
+        n = len(result.violations)
+        print(f"Status: INFEASIBLE ({n} violation{'' if n == 1 else 's'})")
         for v in result.violations[:MAX_SHOWN]:
             print(f"  - {v}")
         if len(result.violations) > MAX_SHOWN:
