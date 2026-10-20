@@ -17,6 +17,12 @@ numba = ">=0.68.0,<0.69"
 # Our own code in src/flowshop, installed so tests and tasks can import it.
 flowshop = { path = ".", editable = true }
 
+[activation.env]
+# Python UTF-8 mode on every platform. Without it, Python on Windows prints with the
+# Windows code page (e.g. "ü" in "Stützle" as byte 0xfc), which a reader expecting
+# UTF-8 cannot decode. Mac and Linux already default to UTF-8.
+PYTHONUTF8 = "1"
+
 [tasks]
 # Pixi runs tasks in its own cross-platform shell, so these behave the same in
 # PowerShell and the Mac terminal. compare also draws the charts; plot is a placeholder.
