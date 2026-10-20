@@ -1,5 +1,37 @@
 # Findings
 
+## Tuning result and tuned defaults (2026-10-19)
+
+2026-10-19 | IG grid d{2,4,6,8} x tp{0.2,0.4,0.8} x iters{500,1000,2000}, 5 seeds, dev small/medium/large only | best (tie rule, within seed noise of top score): d=6 tp=0.8 iters=1000 | weighted avg gap 91.41% (unweighted 92.59%), worst-case seed gap 81.07% (large) | est size-60 runtime ~6 s (upper bound 15.5 s) | raw top score d=6 tp=0.4 iters=2000 at 91.43%, difference inconclusive
+
+- All 540 tuning decisions were rebuilt from their stored sequences and passed the
+  independent checker with matching TWT (`checker` column in results/tuning.csv).
+- Small: every setting and seed reaches 21. Medium: every setting with d >= 4 reaches 58
+  on all seeds by 500 iterations. Only large separates settings.
+- Tie rule: ranks 1 to 4 are the only settings within 1% of the best mean TWT on both
+  medium and large (large means 4198 to 4211; seed-to-seed SD about 80). The fastest of
+  them is d=6, Tp=0.8, 1000 iterations. The tuner first read "1%" as 1 point of weighted
+  gap, which would have picked d=2, Tp=0.8, 500 (large mean 4549, medium worst 92); that
+  reading was rejected.
+- Convergence: from 1000 to 2000 iterations the large mean improves by 6 to 59 for the top
+  three (d, Tp) pairs, below seed noise. 5000 iterations was not tested.
+- Ranking runtimes use development_large only; all large runs were in one session. Small
+  and the first 25 medium runs were made in an earlier session when the laptop was about
+  1.5 to 2.3x slower.
+
+### New defaults, checker-verified (seed 522, John's laptop, i5-1135G7)
+
+| Instance | Rule TWT | IG TWT (old defaults d=4, Tp=0.4) | IG TWT (new defaults d=6, Tp=0.8) | IG waiting (new) | IG time (new) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| hand_checkable | 281 | 233 | 233 | 37 | 0.8 s |
+| development_small | 1417 | 21 | 21 | 323 | 1.2 s |
+| development_medium | 2371 | 58 | 58 | 862 | 2.8 s |
+| development_large | 23015 | 4276 | 4246 | 3713 | 12.5 s |
+
+All four decisions are feasible (checker exit 0). Waiting rose on small (261 to 323) and
+fell on medium (1010 to 862) and large (3722 to 3713); waiting is the secondary measure and
+was not part of the ranking.
+
 ## Checker-verified comparison, IG provisional defaults (2026-10-19)
 
 After merging main (James's independent checker) into john/iterated-greedy. Each method
