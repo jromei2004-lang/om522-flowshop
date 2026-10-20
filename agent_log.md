@@ -2,6 +2,18 @@
 
 Mistakes the coding agent made that we caught, newest first.
 
+## 2026-10-19 (Windows UTF-8, branch john/windows-utf8, Claude Code)
+
+- **Encoding warning on Windows.** The agent-written test
+  `test_same_result_in_separate_processes` passed on Mac but showed 2 warnings on Windows
+  (`UnicodeDecodeError: 'utf-8' codec can't decode byte 0xfc`). The child process printed
+  "Stützle" in the Windows code page, where "ü" is byte 0xfc, and the test read its output
+  as UTF-8. Caught by running the full suite on John's laptop. The agent's own Windows
+  runs missed it because its shell set PYTHONIOENCODING=utf-8, which John's terminal does
+  not. Fixed: `PYTHONUTF8 = "1"` under `[activation.env]` in pixi.toml, so every Pixi
+  command uses UTF-8 on every platform. The test's subprocess call already used
+  encoding="utf-8". Verified with that variable removed: 136 passed, 0 warnings.
+
 ## 2026-10-19 (compare, branch james/compare, Claude Code)
 
 Caught by the reviewer subagent on the checker's new --report option:
