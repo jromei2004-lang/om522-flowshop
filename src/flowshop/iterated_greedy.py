@@ -52,11 +52,13 @@ def _improves(new: float, old: float) -> bool:
 
 @dataclass(frozen=True)
 class Settings:
-    # Provisional defaults until tuning picks them.
+    # Chosen by the tuning grid (README, "Tuning"): d = 6, Tp = 0.8, 1000 iterations tied
+    # the best average within seed noise and is the fastest of the tied group. The seed
+    # was fixed before tuning and is not one of the tuning seeds (1 to 5).
     iterations: int = 1000
-    d: int = 4
+    d: int = 6
     seed: int = 522
-    tp: float = 0.4
+    tp: float = 0.8
     time_limit: float = 480.0  # seconds, safety cap only
 
 

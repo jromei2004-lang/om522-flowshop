@@ -2,6 +2,45 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-19 (tuning finished, tuned defaults)
+
+### What changed
+- Branch `john/tuned-defaults` (from main after PR #6).
+- Tuning grid finished: 180 runs, 540 rows in results/tuning.csv (now committed). Before
+  resuming, two finished runs were rerun with main's code and matched the stored rows
+  exactly (except runtime), so all 540 rows come from the same Iterated Greedy code.
+- All 540 decisions rebuilt from their sequences and checked with the independent checker:
+  540 pass, TWT matches on every row. Written into the `checker` column.
+- Tuner subagent ranked the 36 settings (weights small 0.2, medium 0.4, large 0.4; large
+  runtime under 2 min; worst seed and spread; convergence). Main session verified its
+  numbers. John approved d = 6, Tp = 0.8, 1000 iterations, seed 522.
+- `iterated_greedy.Settings` defaults changed from d = 4, Tp = 0.4 to d = 6, Tp = 0.8
+  (iterations 1000 and seed 522 unchanged).
+- README: new Tuning section (grid, seeds, ranking, top 5, why rank 4 over rank 1, seed
+  522 not a tuning seed). findings.md: tuning summary and new-default results.
+  agent_log.md: tuning mistakes. `pixi run compare` rerun: comparison.csv and two IG
+  figures updated.
+
+### Test results
+`pixi run test`: 136 passed, 0 warnings. `pixi run check` on the new-default decisions for
+hand_checkable and all three development instances: all feasible.
+
+### Current best scores (IG tuned defaults, checker-verified)
+hand_checkable 233 (rule 281), development_small 21 (1417), development_medium 58
+(2371), development_large 4246 (23015). Large takes about 12.5 s on John's laptop;
+estimated size 60 about 6 s.
+
+### Next steps
+1. James reviews the john/tuned-defaults pull request; merge to main.
+2. Make `pixi run tune` run the checker on each decision itself (see agent_log.md), so the
+   `checker` column is reproducible from the repo.
+3. Prototype: record the video (at most 10 minutes) with a fresh instance copied to a new
+   path, both methods, the checker, the comparison, the uncertain input (processing
+   times), and each member's walk-through of one agent-drafted component. Fix the
+   "includes numba load" note that also prints for the rule.
+4. README: opening paragraph on the decision in our own words (guide 2.1) and the method
+   write-up for both methods (guide 2.3).
+
 ## 2026-10-19 (compare)
 
 ### What changed

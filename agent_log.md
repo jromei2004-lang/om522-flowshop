@@ -2,6 +2,28 @@
 
 Mistakes the coding agent made that we caught, newest first.
 
+## 2026-10-19 (tuning, branch john/tuned-defaults, Claude Code)
+
+- **Runtime estimate for the grid was about 3x too low.** Before building `pixi run tune`
+  the agent estimated about 1 hour for the full grid, then 35 to 40 minutes for 180 runs.
+  Timing one setting on development_large first (John's instruction) showed 56 to 126 s
+  per run, about 2 hours in total. Caught by that timing step, before the full grid ran.
+- **`tune` does not run the checker.** John's spec said every tuning decision must pass the
+  checker, but `tune.py` writes `checker = pending` and has no checking step. The 540
+  decisions were checked afterwards with a one-off script outside the repo, and the results
+  were written into the `checker` column (540 pass). Still open: `pixi run tune` alone does
+  not reproduce that column. It should check each decision itself.
+- **Runtimes in tuning.csv come from two sessions.** The agent started the grid, it was
+  stopped, and it resumed in a later session when the laptop ran 1.5 to 2.3x faster. Small
+  and the first 25 medium runs are slower than the rest. Caught by the agent when it reran
+  two finished runs to confirm the code had not changed. Ranking used large-instance
+  runtimes only, which all come from one session.
+- **The tuner subagent first misread the 1% tie rule** as 1 point of weighted gap. Read
+  literally, that would have picked d=2, Tp=0.8, 500 iterations, which is clearly worse on
+  large (mean 4549 vs 4198). The tuner flagged and rejected this itself. The main session
+  reran the ranking with "within 1% of the best mean TWT on medium and large", which gave
+  the same choice (d=6, Tp=0.8, 1000).
+
 ## 2026-10-19 (Windows UTF-8, branch john/windows-utf8, Claude Code)
 
 - **Encoding warning on Windows.** The agent-written test
