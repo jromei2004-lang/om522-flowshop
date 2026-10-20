@@ -103,12 +103,14 @@ def main(argv: list[str] | None = None) -> int:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     write_decision(args.output_dir / "decision.json", build_decision(instance, sequence, times))
 
+    # Six decimals so the rule's run time (tens of microseconds) never prints as 0.
+    numba_note = " (includes numba load and compile)" if args.method == "ig" else ""
     summary = "\n".join(method_lines + [
         "Status: feasible decision written to decision.json",
         f"Instance: {args.input_dir} ({len(instance.jobs)} jobs, {len(instance.stages)} stages)",
         f"Total weighted tardiness: {total_weighted_tardiness(instance, times)}",
         f"Total waiting between stages: {total_waiting(instance, times)}",
-        f"Computation time (s): {runtime:.4f} (includes numba load and compile for ig)",
+        f"Computation time (s): {runtime:.6f}{numba_note}",
         "Measures above are the method's own values. Confirm them with the independent checker.",
     ])
     (args.output_dir / "summary.txt").write_text(summary + "\n", encoding="utf-8")

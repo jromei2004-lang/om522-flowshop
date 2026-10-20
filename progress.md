@@ -14,17 +14,22 @@ Newest entry first. See "Session handoff" in CLAUDE.md for when to update this f
   the comparison table, an 8:45 video outline with commands, and a checklist with owners.
 - Checked by brute force: 233 is the best of all 720 orders on hand_checkable (one order).
 - No method code changed.
+- Run time display: `cli.py` prints 6 decimals and adds "(includes numba load and compile)"
+  only for Iterated Greedy; `compare.py` writes runtime_s with 6 decimals, so the rule shows
+  0.000020 s on hand_checkable instead of 0.0. Two tests added or extended. `pixi run compare`
+  rerun: every measure unchanged, figures byte-identical, only runtimes changed.
+- Plan: hand_checkable Gantt charts and the J005 trade added to the method segment; John's
+  walk-through is now the Windows encoding fix (fast_eval as backup).
 
 ### Test results
-`pixi run test`: 136 passed. All demo commands in the plan were run; every decision feasible.
+`pixi run test`: 137 passed. All demo commands in the plan were run; every decision feasible.
 
 ### Current best scores
 Unchanged: hand_checkable 233, small 21, medium 58, large 4246 (rule 281, 1417, 2371, 23015).
 
 ### Next steps
 See the checklist at the end of docs/prototype_plan.md. Most urgent: James confirms the tuned
-defaults give the same scores on the Mac; John fixes the run time display and the numba note in
-cli.py; README opening paragraph and method write-up.
+defaults give the same scores on the Mac; README opening paragraph and method write-up.
 
 ## 2026-10-19 (tuning finished, tuned defaults)
 

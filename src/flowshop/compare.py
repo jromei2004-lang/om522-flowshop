@@ -110,7 +110,8 @@ def run_one(method: str, instance: str, data_dir: Path, results_dir: Path, cpu: 
     summary_path = out_dir / "summary.txt"
     summary = summary_path.read_text(encoding="utf-8") if summary_path.is_file() else ""
     match = RUNTIME_LINE.search(summary)
-    row["runtime_s"] = float(match.group(1)) if match else ""
+    # Six decimals, not float repr, so a tiny rule time never shows as 0.0 or in e-notation.
+    row["runtime_s"] = f"{float(match.group(1)):.6f}" if match else ""
     match = TIME_LIMIT_LINE.search(summary)
     row["time_limit_s"] = float(match.group(1)) if match else "none"
     match = STOPPING_LINE.search(summary)

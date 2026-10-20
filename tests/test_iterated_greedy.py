@@ -124,7 +124,18 @@ def test_solve_command_defaults_to_ig(tmp_path):
     assert main([str(DATA / "hand_checkable"), str(out), "--iterations", "10"]) == 0
     summary = (out / "summary.txt").read_text(encoding="utf-8")
     assert "Iterated Greedy" in summary
+    assert "(includes numba load and compile)" in summary
     with (out / "decision.json").open(encoding="utf-8") as f:
         decision = json.load(f)
     assert set(decision) == {"sequence", "schedule"}
     assert len(decision["schedule"]) == 6 * 4
+
+
+def test_rule_summary_has_no_numba_note_and_nonzero_time(tmp_path):
+    out = tmp_path / "out"
+    assert main([str(DATA / "hand_checkable"), str(out), "--method", "rule"]) == 0
+    summary = (out / "summary.txt").read_text(encoding="utf-8")
+    assert "numba" not in summary
+    line = next(l for l in summary.splitlines() if l.startswith("Computation time (s): "))
+    value = line.removeprefix("Computation time (s): ")
+    assert len(value.split(".")[1]) == 6 and float(value) > 0

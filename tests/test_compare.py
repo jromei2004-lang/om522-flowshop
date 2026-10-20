@@ -52,6 +52,8 @@ def test_compare_end_to_end_skips_missing_method(tmp_path, capsys):
     assert float(small["total_weighted_tardiness"]) == 1417
     assert (hand["jobs"], hand["stages"]) == ("6", "4")
     assert hand["cpu"] and hand["runtime_s"] != ""
+    # Six decimals, so the rule's tiny run time is never 0.0.
+    assert len(hand["runtime_s"].split(".")[1]) == 6 and float(hand["runtime_s"]) > 0
     assert hand["time_limit_s"] == "none"  # the rule has no time limit
 
     for name in ("gantt_rule_hand_checkable.png", "gantt_rule_development_small.png", "comparison_bars.png"):
@@ -83,7 +85,7 @@ def test_infeasible_decision_gets_no_measures_and_no_gantt(tmp_path, monkeypatch
     row, report = compare.run_one("bad", "hand_checkable", DATA, tmp_path, "test cpu")
     assert row["feasible"] is False
     assert row["total_weighted_tardiness"] == row["total_waiting"] == row["makespan"] == ""
-    assert row["runtime_s"] == 0.5
+    assert row["runtime_s"] == "0.500000"
     assert row["time_limit_s"] == 600.0
     assert row["stopping_rule"] == "iteration count reached; iterations run: 10"
     assert "infeasible" in row["note"]
