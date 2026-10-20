@@ -2,6 +2,30 @@
 
 Newest entry first. See "Session handoff" in CLAUDE.md for when to update this file.
 
+## 2026-10-20 (prototype plan, guide revised October 14)
+
+### What changed
+- Branch `john/prototype-plan` (from main after PR #7, tuned defaults, merged).
+- docs/team-project-guide.pdf and docs/option-6-brief.pdf replaced with the October 14 release
+  (guide page 1: "Revised October 14, 2026"; the brief's text is unchanged). The prototype is
+  now a check-in on our methods; tests 2 and 3, the three-instance comparison, and naming the
+  uncertain input move to the final submission.
+- New docs/prototype_plan.md: each Section 4.1 criterion with evidence, real command output,
+  the comparison table, an 8:45 video outline with commands, and a checklist with owners.
+- Checked by brute force: 233 is the best of all 720 orders on hand_checkable (one order).
+- No method code changed.
+
+### Test results
+`pixi run test`: 136 passed. All demo commands in the plan were run; every decision feasible.
+
+### Current best scores
+Unchanged: hand_checkable 233, small 21, medium 58, large 4246 (rule 281, 1417, 2371, 23015).
+
+### Next steps
+See the checklist at the end of docs/prototype_plan.md. Most urgent: James confirms the tuned
+defaults give the same scores on the Mac; John fixes the run time display and the numba note in
+cli.py; README opening paragraph and method write-up.
+
 ## 2026-10-19 (tuning finished, tuned defaults)
 
 ### What changed
